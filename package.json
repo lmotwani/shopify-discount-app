@@ -1,0 +1,16 @@
+{
+  "name": "quantity-based-discounts",
+  "version": "1.0.0",
+  "description": "Shopify app for quantity-based discounts",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "echo 'Build process not implemented yet'"
+  },
+  "dependencies": {
+    "@shopify/app-bridge": "^3.0.0",
+    "@shopify/koa-shopify-auth": "^5.0.0",
+    "koa": "^2.0.0",
+    "koa-router": "^10.0.0"
+  }
+}

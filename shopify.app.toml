@@ -1,0 +1,18 @@
+name = "Quantity Based Discounts"
+scopes = "read_products,write_products,read_price_rules,write_price_rules"
+embedded = true
+
+[build]
+command = "npm run build"
+dist_dir = "dist"
+
+[development]
+port = 3000
+
+[app_urls]
+redirect_uri = "YOUR_REDIRECT_URI" # Replace with your redirect URI
+
+[compliance_webhooks]
+# Add URLs for compliance webhooks here.  See Shopify documentation for details.
+# Example:
+# uninstall = "YOUR_UNINSTALL_WEBHOOK_URL"
