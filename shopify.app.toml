@@ -1,18 +1,19 @@
 name = "Quantity Based Discounts"
-scopes = "read_products,write_products,read_price_rules,write_price_rules"
+client_id = "078005936813f139cea0d930d5d6122f"
+application_url = "https://shopify-discount-app.webvijayi.com"
 embedded = true
 
-[build]
-command = "npm run build"
-dist_dir = "dist"
+[access_scopes]
+# Read and modify products and their variants
+scopes = "write_products,read_products,write_discounts,read_discounts"
 
-[development]
-port = 3000
+[auth]
+redirect_urls = [
+    "https://shopify-discount-app.webvijayi.com/auth/callback"
+]
 
-[app_urls]
-redirect_uri = "YOUR_REDIRECT_URI" # Replace with your redirect URI
+[webhooks]
+api_version = "2023-10"
 
-[compliance_webhooks]
-# Add URLs for compliance webhooks here.  See Shopify documentation for details.
-# Example:
-# uninstall = "YOUR_UNINSTALL_WEBHOOK_URL"
+[pos]
+embedded = false

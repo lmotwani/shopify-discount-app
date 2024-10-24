@@ -1,225 +1,107 @@
-# Quantity Booster - Smart Bulk Discounts for Shopify
+# Quantity Based Discounts for Shopify
 
-Transform your Shopify store's sales strategy with Quantity Booster, the intelligent bulk discount solution that automatically encourages larger purchases. Our app seamlessly integrates with your store to display dynamic quantity-based discounts, helping you increase average order value while providing value to your customers.
+Boost your sales by offering quantity-based discounts! Encourage customers to buy more with automatic discounts that increase with quantity.
 
-![Shopify App Store Rating](https://img.shields.io/badge/Shopify%20App%20Store-4.9%2F5-brightgreen)
-![Price](https://img.shields.io/badge/Starting%20at-Free-blue)
+## 🎯 Key Features
 
-## 🚀 Key Features
+### Flexible Discount Rules
+* Create percentage or fixed amount discounts
+* Set different discounts for different quantity tiers
+* Example: 10% off for 3+ items, 15% off for 6+, 20% off for 12+
 
-### Core Features (Free Tier)
-- **Smart Discount Rules**
-  - Create quantity-based discounts for up to 5 products
-  - Choose between percentage or fixed amount discounts
-  - Set multiple quantity tiers (e.g., buy 3 save 10%, buy 6 save 15%)
-  - Real-time discount calculations
-  - Mobile-responsive discount displays
+### Easy Setup
+* Install and configure in minutes
+* No coding required
+* Works with any Shopify theme
 
-- **Visual Incentives**
-  - Progress bars showing "Items needed for next discount tier"
-  - Clear savings calculations displayed to customers
-  - Customizable discount messages
-  - Automatic update of cart totals
-
-### Professional Features ($9.99/month)
-- **Advanced Rules**
-  - Unlimited products
-  - Collection-wide discount rules
-  - Time-limited promotions
-  - Customer group-specific discounts
-  - Stackable discounts
-  - Bulk import/export of rules
-
-- **Enhanced Visibility**
-  - Custom discount badges
-  - Product page discount previews
-  - Cart page savings summary
-  - Collection page discount indicators
-  - Mobile-optimized displays
-
-### Premium Features ($29.99/month)
-- **Enterprise Tools**
-  - Store-wide discount campaigns
-  - Advanced analytics dashboard
-  - A/B testing capabilities
-  - Automated discount optimization
-  - Priority support
-  - Custom implementation assistance
+### Smart Discount Display
+* Shows available discounts on product pages
+* Updates automatically in cart
+* Clear savings display encourages larger purchases
 
 ## 💡 Use Cases
 
-### Perfect for:
-- Wholesale merchants
-- Fashion retailers
-- Beauty products
-- Food and beverage
-- Sports equipment
-- Art supplies
-- Office supplies
-- Digital products
+1. **Bundle Deals**
+   * Encourage bulk purchases
+   * "Buy 3 get 10% off, Buy 6 get 15% off"
 
-### Common Scenarios:
-1. Buy 3 Get 10% Off
-2. Spend $100 Save $20
-3. Tiered Volume Pricing
-4. Bundle Deals
-5. Mixed Cart Discounts
+2. **Wholesale Pricing**
+   * Offer tiered pricing for larger quantities
+   * Different discounts for different customer groups
 
-## 🛠 Technical Implementation
+3. **Collection Promotions**
+   * Apply discounts to entire collections
+   * Perfect for seasonal sales
 
-### Installation
-1. Visit the Shopify App Store and search for "Quantity Booster"
-2. Click "Add app" and follow the installation wizard
-3. Grant the required permissions
-4. Complete the initial setup questionnaire
+## 📱 Screenshots
 
-### Quick Start
-```javascript
-// Example: Creating a simple quantity discount
-{
-  "productId": "12345",
-  "type": "percentage",
-  "tiers": [
-    {
-      "quantity": 3,
-      "discount": 10
-    },
-    {
-      "quantity": 6,
-      "discount": 15
-    },
-    {
-      "quantity": 12,
-      "discount": 20
-    }
-  ]
-}
-```
+[Screenshots of the app interface and customer-facing displays will be added here]
 
-### API Endpoints
-- `POST /api/discount-rules` - Create new discount rule
-- `GET /api/discount-rules` - List all discount rules
-- `PUT /api/discount-rules/:id` - Update existing rule
-- `DELETE /api/discount-rules/:id` - Delete rule
-- `GET /api/analytics` - Fetch discount performance data
+## ⚙️ Installation
 
-## 📊 Performance Impact
+1. Install the app from the Shopify App Store
+2. Select products or collections for discounts
+3. Set your quantity tiers and discount amounts
+4. Publish your discounts
 
-### Average Customer Results:
-- 15% increase in average order value
-- 23% increase in units per transaction
-- 8% increase in conversion rate
-- 12% increase in customer satisfaction
+## 💰 Pricing
 
-## 🔒 Security & Performance
+* 14-day free trial
+* Simple pricing: $X.XX per month
+* No hidden fees
 
-### Security Features:
-- Encrypted data transmission
-- Regular security audits
-- GDPR compliant
-- Automatic backups
-- Rate limiting
-- Input validation
+## 🔒 Security
 
-### Performance Optimization:
-- Lazy loading of discount calculations
-- Caching of common queries
-- Minimal impact on page load time (<100ms)
-- Automatic cleanup of expired rules
-- Background processing for analytics
+* Secure data handling
+* Regular backups
+* Compliant with Shopify's security requirements
 
-## 📱 Theme Compatibility
+## 📞 Support
 
-- Works with all Shopify 2.0 themes
-- Compatible with mobile-first designs
-- Responsive discount displays
-- Customizable CSS classes
-- No theme modifications required
+* Email support: support@example.com
+* Response time: Within 24 hours
+* Documentation: [Link to documentation]
 
-## 💪 Best Practices
+## 🔄 Updates
 
-### Setting Up Discounts:
-1. Start with simple tiers
-2. Test different threshold points
-3. Monitor customer behavior
-4. Adjust based on margins
-5. Consider seasonal variations
+We regularly update the app with new features and improvements based on merchant feedback.
 
-### Optimization Tips:
-- Use clear, simple messaging
-- Set achievable quantity thresholds
-- Maintain healthy profit margins
-- Regular review of performance
-- A/B test different approaches
+## 📊 Benefits
 
-## 📈 Analytics & Reporting
+* Increase average order value
+* Boost customer satisfaction
+* Save time with automatic discount application
+* Track performance with built-in analytics
 
-### Key Metrics:
-- Discount usage rates
-- Revenue impact
-- Average order value changes
-- Customer behavior patterns
-- Conversion rate impacts
-- Return on investment
+## 🌟 Merchant Success Stories
 
-### Available Reports:
-- Daily performance summary
-- Discount effectiveness
-- Customer engagement
-- Revenue impact
-- Inventory movement
-- Comparative analysis
+"This app helped increase our average order value by 25% in the first month!" - [Merchant Name]
 
-## 🆘 Support
+## 🤝 Privacy Policy
 
-### Available Resources:
-- 24/7 email support
-- Live chat (Premium)
-- Video tutorials
-- Documentation
-- Community forum
-- Implementation guides
+We take your privacy seriously. [Link to Privacy Policy]
 
-### Common Questions:
-- [Setting up your first discount rule](link)
-- [Managing multiple discounts](link)
-- [Optimizing for mobile](link)
-- [Troubleshooting guide](link)
+## ❓ FAQ
 
-## 🔄 Updates & Roadmap
+**Q: Will this work with my theme?**
+A: Yes, our app works with all Shopify themes.
 
-### Recent Updates:
-- v1.1: Added multi-currency support
-- v1.2: Enhanced mobile displays
-- v1.3: Advanced analytics dashboard
-- v1.4: API improvements
+**Q: Can I offer different discounts for different products?**
+A: Yes, you can set unique discount tiers for individual products or collections.
 
-### Coming Soon:
-- AI-powered discount optimization
-- Enhanced bulk operations
-- Advanced customer segmentation
-- Improved analytics exports
-- Integration with loyalty programs
+**Q: How do I contact support?**
+A: Email us at support@example.com or use the in-app chat.
 
-## 📝 License & Terms
+## 🔧 Requirements
 
-- [Terms of Service](link)
-- [Privacy Policy](link)
-- [Data Processing Agreement](link)
-- [Acceptable Use Policy](link)
+* Shopify Store on any plan
+* Products with variants supported
+* Works with all standard Shopify themes
 
-## 🤝 Getting Started
+## 🚀 Getting Started
 
-1. Install the app from Shopify App Store
-2. Complete the setup wizard
-3. Create your first discount rule
-4. Test the discount
-5. Monitor results
+1. Install the app
+2. Create your first discount rule
+3. Watch your sales grow!
 
-Need help? Contact our support team at support@webvijayi.com
-
----
-
-Made with ❤️ for Shopify merchants
-
-[Website](link) | [Documentation](link) | [Support](link) | [Blog](link)
+For detailed setup instructions, visit our [Help Center].

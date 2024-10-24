@@ -1,14 +1,39 @@
 {
-  "name": "quantity-discount-app",
+  "name": "shopify-quantity-discounts",
   "version": "1.0.0",
-  "description": "Shopify app for quantity-based discounts",
+  "main": "web/index.js",
+  "license": "UNLICENSED",
   "scripts": {
-    "start": "cd backend && npm start",
-    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm start\"",
-    "build": "concurrently \"cd backend && npm run build\" \"cd frontend && npm run build\"",
-    "test": "concurrently \"cd backend && npm test\" \"cd frontend && npm test\""
+    "shopify": "shopify",
+    "build": "shopify app build",
+    "dev": "shopify app dev",
+    "info": "shopify app info",
+    "generate": "shopify app generate",
+    "deploy": "shopify app deploy",
+    "start": "shopify app start"
   },
   "dependencies": {
-    "concurrently": "^8.0.0"
-  }
+    "@shopify/app": "^3.46.5",
+    "@shopify/cli": "^3.46.5",
+    "@shopify/shopify-api": "^7.5.0",
+    "@shopify/shopify-app-express": "^2.1.3",
+    "@shopify/shopify-app-session-storage-sqlite": "^1.2.3",
+    "compression": "^1.7.4",
+    "cross-env": "^7.0.3",
+    "serve-static": "^1.15.0",
+    "@shopify/polaris": "^11.1.2",
+    "@shopify/app-bridge-react": "^3.7.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-query": "^3.39.3",
+    "react-router-dom": "^6.11.2",
+    "sqlite3": "^5.1.6"
+  },
+  "devDependencies": {
+    "@types/node": "^20.2.4",
+    "@types/react": "^18.2.7",
+    "prettier": "^2.8.8",
+    "typescript": "^5.0.4"
+  },
+  "author": "shopify-partner"
 }
