@@ -1,16 +1,14 @@
 {
-  "name": "quantity-based-discounts",
+  "name": "quantity-discount-app",
   "version": "1.0.0",
   "description": "Shopify app for quantity-based discounts",
-  "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "build": "echo 'Build process not implemented yet'"
+    "start": "cd backend && npm start",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm start\"",
+    "build": "concurrently \"cd backend && npm run build\" \"cd frontend && npm run build\"",
+    "test": "concurrently \"cd backend && npm test\" \"cd frontend && npm test\""
   },
   "dependencies": {
-    "@shopify/app-bridge": "^3.0.0",
-    "@shopify/koa-shopify-auth": "^5.0.0",
-    "koa": "^2.0.0",
-    "koa-router": "^10.0.0"
+    "concurrently": "^8.0.0"
   }
 }
