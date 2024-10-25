@@ -1,29 +1,19 @@
-import { useAuthenticatedFetch } from "@shopify/app-bridge-react";
-import { useState, useCallback } from "react";
+import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 
 export function useApi() {
   const fetch = useAuthenticatedFetch();
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const makeRequest = useCallback(async (endpoint, options = {}) => {
-    setIsLoading(true);
-    setError(null);
-
+  const makeRequest = async (endpoint, options = {}) => {
     try {
-      const response = await fetch(endpoint, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-      });
-
+      setIsLoading(true);
+      const response = await fetch(endpoint, options);
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'An error occurred');
+        throw new Error(`API error: ${response.statusText}`);
       }
-
       const data = await response.json();
       return data;
     } catch (err) {
@@ -32,53 +22,60 @@ export function useApi() {
     } finally {
       setIsLoading(false);
     }
-  }, [fetch]);
+  };
 
-  const addToCart = useCallback(async (variantId, quantity) => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const addToCart = async (variantId, quantity) => {
+    return makeRequest('/api/cart/add', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ variantId, quantity })
+    });
+  };
 
-      // First check if item exists in cart
-      const cartResponse = await fetch('/cart.js');
-      const cart = await cartResponse.json();
-      
-      // Add items to cart
-      const response = await fetch('/cart/add.js', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          items: [{
-            id: variantId,
-            quantity: quantity
-          }]
-        }),
+  const discountRules = useQuery({
+    queryKey: ["discountRules"],
+    queryFn: async () => {
+      const response = await fetch("/api/discounts");
+      return response.json();
+    },
+  });
+
+  const createDiscountRule = useMutation({
+    mutationFn: async (data) => {
+      return makeRequest("/api/discounts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
       });
+    },
+  });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to add to cart');
-      }
+  const updateDiscountRule = useMutation({
+    mutationFn: async ({ id, data }) => {
+      return makeRequest(`/api/discounts/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+    },
+  });
 
-      // Get updated cart
-      const updatedCartResponse = await fetch('/cart.js');
-      const updatedCart = await updatedCartResponse.json();
-
-      return updatedCart;
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [fetch]);
+  const deleteDiscountRule = useMutation({
+    mutationFn: async (id) => {
+      return makeRequest(`/api/discounts/${id}`, {
+        method: "DELETE",
+      });
+    },
+  });
 
   return {
     makeRequest,
     addToCart,
     isLoading,
     error,
+    discountRules,
+    createDiscountRule,
+    updateDiscountRule,
+    deleteDiscountRule,
   };
 }

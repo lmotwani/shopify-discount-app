@@ -49,9 +49,6 @@ export function QuantityDiscountWidget({ product, shop }) {
       await addToCart(variantId, qty);
       setToastMessage(`Added ${qty} item${qty > 1 ? 's' : ''} to cart`);
       setShowToast(true);
-      
-      // Optional: Redirect to cart
-      // window.location.href = '/cart';
     } catch (err) {
       setToastMessage(err.message || 'Failed to add to cart');
       setShowToast(true);

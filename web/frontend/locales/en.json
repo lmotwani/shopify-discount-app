@@ -1,0 +1,30 @@
+{
+  "discountRule": {
+    "title": "Create Discount Rule",
+    "type": "Discount Type",
+    "percentage": "Percentage",
+    "fixed": "Fixed Amount",
+    "quantity": "Minimum Quantity",
+    "value": "Discount Value",
+    "scope": "Apply To",
+    "allProducts": "All Products",
+    "specificProducts": "Specific Products",
+    "selectProducts": "Select Products",
+    "selectedProducts": "{{count}} products selected",
+    "selectedProducts_plural": "{{count}} products selected",
+    "create": "Create Discount Rule"
+  },
+  "cartSummary": {
+    "title": "Cart Summary",
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "total": "Total",
+    "empty": "Your cart is empty"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit"
+  }
+}

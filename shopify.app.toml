@@ -4,16 +4,8 @@ application_url = "https://shopify-discount-app.webvijayi.com"
 embedded = true
 
 [access_scopes]
-# Product access for applying discounts
-scopes = "write_products,read_products"
-
-# Price rules and discounts
-scopes = "read_price_rules,write_price_rules"
-scopes = "read_discounts,write_discounts"
-
-# Theme and script access for widget injection
-scopes = "read_themes,write_themes"
-scopes = "read_script_tags,write_script_tags"
+# Combined scopes in one string, comma-separated
+scopes = "write_products,read_products,read_price_rules,write_price_rules,read_discounts,write_discounts,read_themes,write_themes,read_script_tags,write_script_tags"
 
 [auth]
 redirect_urls = [
@@ -22,7 +14,15 @@ redirect_urls = [
 ]
 
 [webhooks]
-api_version = "2023-10"
+api_version = "2024-01"
+
+[[webhooks.subscriptions]]
+topics = ["app/uninstalled"]
+uri = "/api/webhooks"
+
+[build]
+automatically_update_urls_on_dev = true
+include_config_on_deploy = true
 
 [pos]
 embedded = false

@@ -1,112 +1,170 @@
-import React from "react";
+import { useCallback, useState, useEffect } from "react";
 import {
   Card,
+  Layout,
+  TextContainer,
   Text,
-  VerticalStack,
-  HorizontalStack,
+  Stack,
   Banner,
-  Box
+  Page,
+  Button,
+  Frame,
+  Loading,
+  Toast
 } from "@shopify/polaris";
+import { useTranslation } from "react-i18next";
+import { useApi } from "../hooks/useApi";
+import { QuantityDiscountWidget } from "./QuantityDiscountWidget";
 import "./styles/CartSummary.css";
 
-export function CartSummary({ items, discounts }) {
-  const calculateItemTotal = (item) => {
-    const discount = discounts.find(d => d.productId === item.productId)?.discount;
-    if (!discount) return item.price * item.quantity;
+export function CartSummary() {
+  const { t } = useTranslation();
+  const { makeRequest } = useApi();
+  const [cart, setCart] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
-    if (discount.type === "percentage") {
-      const discountAmount = (item.price * item.quantity * discount.value) / 100;
-      return item.price * item.quantity - discountAmount;
-    } else {
-      return item.price * item.quantity - (discount.value * item.quantity);
+  useEffect(() => {
+    const fetchCart = async () => {
+      try {
+        const data = await makeRequest("/api/cart");
+        setCart(data);
+      } catch (err) {
+        console.error("Error fetching cart:", err);
+        setToastMessage(t("cartSummary.fetchError"));
+        setShowToast(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCart();
+  }, [makeRequest, t]);
+
+  const handleUpdateQuantity = useCallback(async (lineId, quantity) => {
+    try {
+      setLoading(true);
+      await makeRequest("/api/cart/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lineId, quantity })
+      });
+      const updatedCart = await makeRequest("/api/cart");
+      setCart(updatedCart);
+      setToastMessage(t("cartSummary.updateSuccess"));
+      setShowToast(true);
+    } catch (err) {
+      console.error("Error updating cart:", err);
+      setToastMessage(t("cartSummary.updateError"));
+      setShowToast(true);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [makeRequest, t]);
 
-  const calculateItemSavings = (item) => {
-    const originalTotal = item.price * item.quantity;
-    const discountedTotal = calculateItemTotal(item);
-    return originalTotal - discountedTotal;
-  };
+  const toastMarkup = showToast ? (
+    <Toast
+      content={toastMessage}
+      onDismiss={() => setShowToast(false)}
+      duration={3000}
+    />
+  ) : null;
 
-  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const totalSavings = items.reduce((sum, item) => sum + calculateItemSavings(item), 0);
-  const total = subtotal - totalSavings;
+  if (loading) {
+    return (
+      <Frame>
+        <Loading />
+      </Frame>
+    );
+  }
+
+  if (!cart?.items?.length) {
+    return (
+      <Page title={t("cartSummary.title")}>
+        <Layout>
+          <Layout.Section>
+            <Banner status="info">
+              <p>{t("cartSummary.empty")}</p>
+            </Banner>
+          </Layout.Section>
+        </Layout>
+      </Page>
+    );
+  }
 
   return (
-    <Card sectioned>
-      <VerticalStack gap="4">
-        <Text variant="headingMd">Cart Summary</Text>
+    <Frame>
+      {toastMarkup}
+      <Page title={t("cartSummary.title")}>
+        <Layout>
+          <Layout.Section>
+            <Card sectioned>
+              <Stack vertical spacing="loose">
+                {cart.items.map((item) => (
+                  <Stack key={item.id} distribution="equalSpacing" alignment="center">
+                    <Stack spacing="tight">
+                      <Text variant="bodyMd" as="span">
+                        {item.title}
+                      </Text>
+                      <Text variant="bodySm" as="span" color="subdued">
+                        × {item.quantity}
+                      </Text>
+                    </Stack>
+                    <Stack spacing="tight">
+                      <Button
+                        plain
+                        disabled={loading}
+                        onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                      >
+                        −
+                      </Button>
+                      <Text variant="bodyMd" as="span">
+                        {item.quantity}
+                      </Text>
+                      <Button
+                        plain
+                        disabled={loading}
+                        onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                      >
+                        +
+                      </Button>
+                      <Text variant="bodyMd" as="span">
+                        ${(item.price * item.quantity).toFixed(2)}
+                      </Text>
+                    </Stack>
+                  </Stack>
+                ))}
 
-        {/* Items Breakdown */}
-        {items.map((item) => {
-          const discount = discounts.find(d => d.productId === item.productId)?.discount;
-          const savings = calculateItemSavings(item);
+                <Stack distribution="equalSpacing">
+                  <Text variant="headingSm">{t("cartSummary.subtotal")}</Text>
+                  <Text variant="headingSm">${cart.subtotal.toFixed(2)}</Text>
+                </Stack>
 
-          return (
-            <div key={item.productId} className="cart-item">
-              <HorizontalStack align="space-between">
-                <VerticalStack gap="1">
-                  <Text variant="bodyMd">{item.title}</Text>
-                  <Text variant="bodySm" color="subdued">
-                    Qty: {item.quantity} × ${item.price.toFixed(2)}
-                  </Text>
-                </VerticalStack>
-                <VerticalStack gap="1" align="end">
-                  <Text variant="bodyMd">${calculateItemTotal(item).toFixed(2)}</Text>
-                  {savings > 0 && (
-                    <Text variant="bodySm" color="success">
-                      Save ${savings.toFixed(2)}
+                {cart.discount > 0 && (
+                  <Stack distribution="equalSpacing">
+                    <Text variant="headingSm" color="success">
+                      {t("cartSummary.discount")}
                     </Text>
-                  )}
-                </VerticalStack>
-              </HorizontalStack>
-              {discount && (
-                <Box paddingBlock="3">
-                  <Banner status="success" icon={false}>
-                    {discount.type === "percentage"
-                      ? `${discount.value}% off ${discount.quantity}+ items`
-                      : `$${discount.value} off per item for ${discount.quantity}+ items`}
-                  </Banner>
-                </Box>
-              )}
-            </div>
-          );
-        })}
+                    <Text variant="headingSm" color="success">
+                      -${cart.discount.toFixed(2)}
+                    </Text>
+                  </Stack>
+                )}
 
-        {/* Totals */}
-        <div className="cart-totals">
-          <HorizontalStack align="space-between">
-            <Text variant="bodyMd">Subtotal</Text>
-            <Text variant="bodyMd">${subtotal.toFixed(2)}</Text>
-          </HorizontalStack>
+                <Stack distribution="equalSpacing">
+                  <Text variant="headingLg">{t("cartSummary.total")}</Text>
+                  <Text variant="headingLg">${cart.total.toFixed(2)}</Text>
+                </Stack>
+              </Stack>
+            </Card>
+          </Layout.Section>
 
-          {totalSavings > 0 && (
-            <HorizontalStack align="space-between">
-              <Text variant="bodyMd" color="success">Total Savings</Text>
-              <Text variant="bodyMd" color="success">-${totalSavings.toFixed(2)}</Text>
-            </HorizontalStack>
-          )}
-
-          <Box paddingBlockStart="4">
-            <HorizontalStack align="space-between">
-              <Text variant="headingMd">Total</Text>
-              <Text variant="headingMd">${total.toFixed(2)}</Text>
-            </HorizontalStack>
-          </Box>
-        </div>
-
-        {/* Savings Summary */}
-        {totalSavings > 0 && (
-          <Banner status="success">
-            <VerticalStack gap="2">
-              <Text>You're saving ${totalSavings.toFixed(2)} with quantity discounts!</Text>
-              <Text variant="bodySm" color="subdued">
-                {discounts.filter(d => d.discount).length} items have quantity discounts applied
-              </Text>
-            </VerticalStack>
-          </Banner>
-        )}
-      </VerticalStack>
-    </Card>
+          <Layout.Section secondary>
+            <QuantityDiscountWidget />
+          </Layout.Section>
+        </Layout>
+      </Page>
+    </Frame>
   );
 }
