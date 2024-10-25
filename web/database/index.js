@@ -8,9 +8,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const dbFile = join(__dirname, 'shopify.sqlite3');
 const dbDir = dirname(dbFile);
 
-// Ensure database directory exists with proper permissions
+// Ensure database directory exists
 if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true, mode: 0o777 });
+  fs.mkdirSync(dbDir, { recursive: true });
 }
 
 let db;
@@ -20,7 +20,7 @@ export async function setupDatabase() {
     try {
       // Ensure database file has proper permissions
       if (fs.existsSync(dbFile)) {
-        fs.chmodSync(dbFile, 0o777);
+        fs.chmodSync(dbFile, 0o666);
       }
 
       db = await open({
@@ -47,24 +47,9 @@ export async function setupDatabase() {
         CREATE INDEX IF NOT EXISTS idx_shop_domain ON discount_rules(shop_domain);
         CREATE INDEX IF NOT EXISTS idx_scope ON discount_rules(scope);
         CREATE INDEX IF NOT EXISTS idx_active ON discount_rules(active);
-
-        CREATE TABLE IF NOT EXISTS product_collections (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          product_id TEXT NOT NULL,
-          collection_id TEXT NOT NULL,
-          shop_domain TEXT NOT NULL,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          UNIQUE(product_id, collection_id, shop_domain)
-        );
-
-        CREATE INDEX IF NOT EXISTS idx_product_collections_product ON product_collections(product_id);
-        CREATE INDEX IF NOT EXISTS idx_product_collections_collection ON product_collections(collection_id);
       `);
 
-      // Set busy timeout to handle concurrent access
-      await db.run('PRAGMA busy_timeout = 6000');
-      await db.run('PRAGMA journal_mode = WAL');
-      await db.run('PRAGMA foreign_keys = ON');
+      console.log('Database setup complete');
     } catch (error) {
       console.error('Database setup error:', error);
       throw error;
