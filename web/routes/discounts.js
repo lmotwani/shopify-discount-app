@@ -1,16 +1,20 @@
 import express from 'express';
 import { getDatabase } from '../database/index.js';
 
-export const discountRoutes = express.Router();
+const router = express.Router();
 
 // Get all discount rules for a shop
-discountRoutes.get('/', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const db = await getDatabase();
-    const shopDomain = req.shopify.session.shop;
+    const shopDomain = req.query.shop;
     
+    if (!shopDomain) {
+      return res.status(400).json({ error: 'Shop domain is required' });
+    }
+
     const rules = await db.all(
-      'SELECT * FROM discount_rules WHERE shop_domain = ? AND active = 1 ORDER BY created_at DESC',
+      'SELECT * FROM discount_rules WHERE shop_domain = ? AND active = 1 ORDER BY quantity ASC',
       [shopDomain]
     );
     
@@ -22,14 +26,14 @@ discountRoutes.get('/', async (req, res) => {
 });
 
 // Create new discount rule
-discountRoutes.post('/', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const db = await getDatabase();
-    const shopDomain = req.shopify.session.shop;
-    const { type, quantity, value, scope, productId, collectionId } = req.body;
+    const shopDomain = req.query.shop;
+    const { type, quantity, value, productId, collectionId } = req.body;
 
     // Validate input
-    if (!type || !quantity || !value || !scope) {
+    if (!type || !quantity || !value) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -41,15 +45,11 @@ discountRoutes.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Percentage must be between 0 and 100' });
     }
 
-    if (quantity < 1) {
-      return res.status(400).json({ error: 'Quantity must be at least 1' });
-    }
-
     const result = await db.run(
-      `INSERT INTO discount_rules 
-       (shop_domain, type, quantity, value, product_id, collection_id, scope) 
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [shopDomain, type, quantity, value, productId || null, collectionId || null, scope]
+      `INSERT INTO discount_rules (
+        shop_domain, type, quantity, value, product_id, collection_id
+      ) VALUES (?, ?, ?, ?, ?, ?)`,
+      [shopDomain, type, quantity, value, productId || null, collectionId || null]
     );
 
     const newRule = await db.get(
@@ -57,7 +57,7 @@ discountRoutes.post('/', async (req, res) => {
       [result.lastID]
     );
 
-    res.status(201).json(newRule);
+    res.status(201).json({ rule: newRule });
   } catch (error) {
     console.error('Error creating discount rule:', error);
     res.status(500).json({ error: 'Failed to create discount rule' });
@@ -65,11 +65,11 @@ discountRoutes.post('/', async (req, res) => {
 });
 
 // Delete discount rule
-discountRoutes.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     const db = await getDatabase();
-    const shopDomain = req.shopify.session.shop;
     const { id } = req.params;
+    const shopDomain = req.query.shop;
 
     const result = await db.run(
       'DELETE FROM discount_rules WHERE id = ? AND shop_domain = ?',
@@ -88,43 +88,32 @@ discountRoutes.delete('/:id', async (req, res) => {
 });
 
 // Calculate discount for a product
-discountRoutes.get('/calculate', async (req, res) => {
+router.get('/calculate', async (req, res) => {
   try {
     const db = await getDatabase();
-    const shopDomain = req.shopify.session.shop;
+    const shopDomain = req.query.shop;
     const { productId, quantity } = req.query;
 
     if (!productId || !quantity) {
-      return res.status(400).json({ error: 'Missing required parameters' });
+      return res.status(400).json({ error: 'Product ID and quantity are required' });
     }
 
-    const rules = await db.all(
+    const rule = await db.get(
       `SELECT * FROM discount_rules 
        WHERE shop_domain = ? 
-       AND active = 1
-       AND (
-         product_id = ? 
-         OR collection_id IN (
-           SELECT collection_id 
-           FROM product_collections 
-           WHERE product_id = ?
-         )
-         OR (scope = 'all')
-       )
+       AND (product_id = ? OR product_id IS NULL)
        AND quantity <= ?
+       AND active = 1
        ORDER BY quantity DESC, value DESC
        LIMIT 1`,
-      [shopDomain, productId, productId, quantity]
+      [shopDomain, productId, quantity]
     );
 
-    if (rules.length === 0) {
-      return res.json({ discount: null });
-    }
-
-    const rule = rules[0];
-    res.json({ discount: rule });
+    res.json({ discount: rule || null });
   } catch (error) {
     console.error('Error calculating discount:', error);
     res.status(500).json({ error: 'Failed to calculate discount' });
   }
 });
+
+export default router;

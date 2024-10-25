@@ -1,40 +1,41 @@
-import { useState, useCallback } from "react";
-import { Button, Modal, TextContainer } from "@shopify/polaris";
+import React, { useState, useCallback } from "react";
 import { ResourcePicker as ShopifyResourcePicker } from "@shopify/app-bridge-react";
+import { Button, Stack, TextStyle } from "@shopify/polaris";
 
-export function ResourcePicker({ type, onSelect, buttonText }) {
+export function ResourcePicker({ type, onSelect, selectedResource }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
 
   const handleSelection = useCallback(
     (resources) => {
       const selection = resources.selection[0];
-      setSelectedItem(selection);
-      onSelect(selection);
+      onSelect({
+        id: selection.id,
+        title: selection.title,
+      });
       setIsOpen(false);
     },
     [onSelect]
   );
 
   return (
-    <>
+    <Stack vertical>
       <Button onClick={() => setIsOpen(true)}>
-        {buttonText || `Select ${type}`}
+        {selectedResource ? `Change ${type}` : `Select ${type}`}
       </Button>
 
-      {selectedItem && (
-        <TextContainer>
-          <p>Selected: {selectedItem.title}</p>
-        </TextContainer>
+      {selectedResource && (
+        <TextStyle variation="subdued">
+          Selected: {selectedResource.title}
+        </TextStyle>
       )}
 
       <ShopifyResourcePicker
-        resourceType={type}
+        resourceType={type === "Product" ? "Product" : "Collection"}
         open={isOpen}
         onCancel={() => setIsOpen(false)}
         onSelection={handleSelection}
         allowMultiple={false}
       />
-    </>
+    </Stack>
   );
 }

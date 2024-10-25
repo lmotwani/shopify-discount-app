@@ -1,10 +1,10 @@
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
-import { dirname } from 'path';
+import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const dbFile = process.env.SQLITE_PATH || `${__dirname}/shopify.sqlite3`;
+const dbFile = join(__dirname, 'shopify.sqlite3');
 
 let db;
 
@@ -20,7 +20,6 @@ export async function setupDatabase() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         shop_domain TEXT NOT NULL,
         type TEXT CHECK(type IN ('percentage', 'fixed')) NOT NULL,
-        scope TEXT CHECK(scope IN ('all', 'collection', 'product')) NOT NULL,
         quantity INTEGER NOT NULL,
         value DECIMAL(10,2) NOT NULL,
         product_id TEXT,
@@ -31,19 +30,8 @@ export async function setupDatabase() {
       );
 
       CREATE INDEX IF NOT EXISTS idx_shop_domain ON discount_rules(shop_domain);
-      CREATE INDEX IF NOT EXISTS idx_product_id ON discount_rules(product_id);
-      CREATE INDEX IF NOT EXISTS idx_collection_id ON discount_rules(collection_id);
-      CREATE INDEX IF NOT EXISTS idx_scope ON discount_rules(scope);
-
-      CREATE TABLE IF NOT EXISTS product_collections (
-        product_id TEXT NOT NULL,
-        collection_id TEXT NOT NULL,
-        shop_domain TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (product_id, collection_id, shop_domain)
-      );
-
-      CREATE INDEX IF NOT EXISTS idx_pc_shop ON product_collections(shop_domain);
+      CREATE INDEX IF NOT EXISTS idx_product ON discount_rules(product_id);
+      CREATE INDEX IF NOT EXISTS idx_collection ON discount_rules(collection_id);
     `);
   }
   return db;

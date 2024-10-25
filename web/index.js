@@ -4,66 +4,71 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import { Shopify, ApiVersion } from '@shopify/shopify-api';
 import { SQLiteSessionStorage } from '@shopify/shopify-app-session-storage-sqlite';
+import serveStatic from 'serve-static';
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
-const isTest = process.env.NODE_ENV === 'test' || !!process.env.VITE_TEST_BUILD;
+const STATIC_PATH = join(process.cwd(), 'frontend/dist');
 
 // Initialize SQLite session storage
-const sessionStorage = new SQLiteSessionStorage(`${process.cwd()}/web/database/sessions.sqlite`);
+const sessionStorage = new SQLiteSessionStorage(join(process.cwd(), 'database/sessions.sqlite'));
 
 // Initialize Shopify
 Shopify.Context.initialize({
   API_KEY: process.env.SHOPIFY_API_KEY,
   API_SECRET_KEY: process.env.SHOPIFY_API_SECRET,
   SCOPES: process.env.SCOPES?.split(',') || ['write_products', 'read_products'],
-  HOST_NAME: process.env.HOST?.replace(/https?:\/\//, '') || 'localhost',
-  HOST_SCHEME: process.env.HOST?.split('://')[0] || 'http',
+  HOST_NAME: process.env.HOST?.replace(/https?:\/\//, ''),
+  HOST_SCHEME: process.env.HOST?.split('://')[0] || 'https',
   API_VERSION: ApiVersion.October23,
   IS_EMBEDDED_APP: true,
   SESSION_STORAGE: sessionStorage,
 });
 
-const STATIC_PATH = `${process.cwd()}/frontend/dist`;
-
 const app = express();
+
+// Middleware
+app.use(express.json());
 app.use(cookieParser(process.env.SHOPIFY_API_SECRET));
 
-// Set up Shopify authentication and webhook handling
-app.get(Shopify.Context.AUTH_PATH, async (req, res, next) => {
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Auth endpoints
+app.get('/auth', async (req, res) => {
   try {
-    await Shopify.Auth.begin({
-      shop: req.query.shop,
-      callbackPath: '/auth/callback',
-      isOnline: false,
-      rawRequest: req,
-      rawResponse: res,
-    });
+    const authRoute = await Shopify.Auth.beginAuth(
+      req,
+      res,
+      req.query.shop,
+      '/auth/callback',
+      false
+    );
+    res.redirect(authRoute);
   } catch (error) {
     console.error('Auth error:', error);
-    res.status(500).send(error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 
-app.get('/auth/callback', async (req, res, next) => {
+app.get('/auth/callback', async (req, res) => {
   try {
-    const session = await Shopify.Auth.callback({
-      rawRequest: req,
-      rawResponse: res,
-      isOnline: false,
-    });
-
-    // Redirect to app with shop parameter
-    const shop = session.shop;
+    const session = await Shopify.Auth.validateAuthCallback(
+      req,
+      res,
+      req.query
+    );
     const host = req.query.host;
-    const redirectUrl = `/?shop=${shop}&host=${host}`;
-    res.redirect(redirectUrl);
+    const shop = session.shop;
+    res.redirect(`/?shop=${shop}&host=${host}`);
   } catch (error) {
-    console.error('Callback error:', error);
-    res.status(500).send(error.message);
+    console.error('Auth callback error:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Verify requests are from Shopify
+// Verify Shopify requests
 app.use(async (req, res, next) => {
   const shop = req.query.shop;
   if (Shopify.Context.IS_EMBEDDED_APP && shop) {
@@ -71,55 +76,50 @@ app.use(async (req, res, next) => {
       'Content-Security-Policy',
       `frame-ancestors https://${shop} https://admin.shopify.com;`
     );
-  } else {
-    res.setHeader('Content-Security-Policy', 'frame-ancestors none;');
   }
   next();
 });
 
-// Handle webhooks
-app.post('/webhooks/:topic', async (req, res) => {
-  const { topic } = req.params;
-  const shop = req.headers['x-shopify-shop-domain'];
+// API routes
+import discountRoutes from './routes/discounts.js';
+app.use('/api/discounts', discountRoutes);
 
-  try {
-    await Shopify.Webhooks.Registry.process({
-      shop,
-      topic,
-      rawBody: req.body,
-    });
-    console.log(`Webhook processed, shop ${shop} topic ${topic}`);
-    res.status(200).send('OK');
-  } catch (error) {
-    console.error(`Failed to process webhook: ${error}`);
-    res.status(500).send(error.message);
-  }
-});
+// Serve static files
+app.use(serveStatic(STATIC_PATH, { index: false }));
 
-// Serve static files and handle client routes
-app.use(express.static(STATIC_PATH));
-app.use((req, res, next) => {
+// Serve frontend for all other routes
+app.get('*', async (req, res) => {
   const shop = req.query.shop;
-  if (!shop && req.path !== '/login') {
-    res.redirect(`/login?shop=${shop}`);
-    return;
-  }
-  next();
-});
-
-app.get('/*', async (req, res) => {
-  const shop = req.query.shop;
-  const appInstalled = await Shopify.Auth.isAppInstalled(shop);
-
-  if (!appInstalled && !req.path.includes('/auth')) {
+  
+  if (!shop) {
     res.redirect(`/auth?shop=${shop}`);
     return;
+  }
+
+  try {
+    const session = await Shopify.Utils.loadCurrentSession(req, res);
+    if (!session && !req.url.includes('/auth')) {
+      res.redirect(`/auth?shop=${shop}`);
+      return;
+    }
+  } catch (error) {
+    console.error('Session error:', error);
   }
 
   res.set('Content-Type', 'text/html');
   res.send(readFileSync(join(STATIC_PATH, 'index.html')));
 });
 
+// Error handling
+app.use((err, req, res, next) => {
+  console.error('App error:', err);
+  res.status(500).json({ 
+    error: 'Internal Server Error',
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
+// Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Static files being served from: ${STATIC_PATH}`);
