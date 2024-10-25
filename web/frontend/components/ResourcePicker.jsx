@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { ResourcePicker as ShopifyResourcePicker } from "@shopify/app-bridge-react";
-import { Button, Stack, TextStyle } from "@shopify/polaris";
+import { Button, VerticalStack, Text } from "@shopify/polaris";
 
 export function ResourcePicker({ type, onSelect, selectedResource }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,15 +18,15 @@ export function ResourcePicker({ type, onSelect, selectedResource }) {
   );
 
   return (
-    <Stack vertical>
+    <VerticalStack gap="2">
       <Button onClick={() => setIsOpen(true)}>
         {selectedResource ? `Change ${type}` : `Select ${type}`}
       </Button>
 
       {selectedResource && (
-        <TextStyle variation="subdued">
+        <Text variant="bodySm" color="subdued">
           Selected: {selectedResource.title}
-        </TextStyle>
+        </Text>
       )}
 
       <ShopifyResourcePicker
@@ -36,6 +36,6 @@ export function ResourcePicker({ type, onSelect, selectedResource }) {
         onSelection={handleSelection}
         allowMultiple={false}
       />
-    </Stack>
+    </VerticalStack>
   );
 }
