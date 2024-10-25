@@ -3,11 +3,11 @@ import {
   Card,
   Text,
   VerticalStack,
+  HorizontalStack,
   Banner,
   Select,
   Button,
   TextField,
-  HorizontalStack,
   Box
 } from "@shopify/polaris";
 import "./styles/QuantityDiscountWidget.css";
@@ -81,57 +81,77 @@ export function DiscountPreview({ rule }) {
             <Button primary>Add to Cart</Button>
           </div>
 
-          <div className="discount-tiers">
-            <div className="discount-tier">
-              <div className="tier-header">Buy {rule.quantity}+</div>
-              <div className="tier-price">
-                ${(calculateDiscountedPrice(rule.quantity) / rule.quantity).toFixed(2)} per item
-              </div>
-              <div className="tier-savings">
-                {rule.type === "percentage" 
-                  ? `Save ${rule.value}% off`
-                  : `Save $${rule.value} per item`}
-                <br />
-                Total savings: ${calculateSavings(rule.quantity).toFixed(2)}
-              </div>
-            </div>
+          <VerticalStack gap="4">
+            <Box
+              padding="4"
+              background="bg-surface-secondary"
+              borderRadius="2"
+              borderWidth="1"
+              borderColor="border"
+            >
+              <VerticalStack gap="2">
+                <Text variant="headingSm">Buy {rule.quantity}+</Text>
+                <Text variant="bodyMd">
+                  ${(calculateDiscountedPrice(rule.quantity) / rule.quantity).toFixed(2)} per item
+                </Text>
+                <Text variant="bodySm" color="success">
+                  {rule.type === "percentage" 
+                    ? `Save ${rule.value}% off`
+                    : `Save $${rule.value} per item`}
+                  <br />
+                  Total savings: ${calculateSavings(rule.quantity).toFixed(2)}
+                </Text>
+              </VerticalStack>
+            </Box>
 
-            <div className="discount-tier">
-              <div className="tier-header">Buy {rule.quantity * 2}+</div>
-              <div className="tier-price">
-                ${(calculateDiscountedPrice(rule.quantity * 2) / (rule.quantity * 2)).toFixed(2)} per item
-              </div>
-              <div className="tier-savings">
-                {rule.type === "percentage" 
-                  ? `Save ${rule.value}% off`
-                  : `Save $${rule.value} per item`}
-                <br />
-                Total savings: ${calculateSavings(rule.quantity * 2).toFixed(2)}
-              </div>
-            </div>
-          </div>
+            <Box
+              padding="4"
+              background="bg-surface-secondary"
+              borderRadius="2"
+              borderWidth="1"
+              borderColor="border"
+            >
+              <VerticalStack gap="2">
+                <Text variant="headingSm">Buy {rule.quantity * 2}+</Text>
+                <Text variant="bodyMd">
+                  ${(calculateDiscountedPrice(rule.quantity * 2) / (rule.quantity * 2)).toFixed(2)} per item
+                </Text>
+                <Text variant="bodySm" color="success">
+                  {rule.type === "percentage" 
+                    ? `Save ${rule.value}% off`
+                    : `Save $${rule.value} per item`}
+                  <br />
+                  Total savings: ${calculateSavings(rule.quantity * 2).toFixed(2)}
+                </Text>
+              </VerticalStack>
+            </Box>
+          </VerticalStack>
 
           {previewQuantity >= rule.quantity && (
-            <div className="selection-summary">
-              <div className="total-price">
-                Total: ${calculateDiscountedPrice(previewQuantity).toFixed(2)}
-              </div>
-              <div className="total-savings">
-                You save: ${calculateSavings(previewQuantity).toFixed(2)}
-              </div>
-            </div>
+            <Box padding="4" background="bg-surface-secondary" borderRadius="2">
+              <VerticalStack gap="2">
+                <Text variant="headingSm">
+                  Total: ${calculateDiscountedPrice(previewQuantity).toFixed(2)}
+                </Text>
+                <Text variant="bodySm" color="success">
+                  You save: ${calculateSavings(previewQuantity).toFixed(2)}
+                </Text>
+              </VerticalStack>
+            </Box>
           )}
         </div>
 
         <Banner status="info">
-          <p>This is how your discount rule will appear to customers on product pages.</p>
-          <Text variant="bodySm" color="subdued">
-            {rule.scope === "all" 
-              ? "This rule will apply to all products"
-              : rule.scope === "products"
-              ? `This rule will apply to ${rule.productTitles?.length || 0} selected products`
-              : `This rule will apply to products in ${rule.collectionTitles?.length || 0} selected collections`}
-          </Text>
+          <VerticalStack gap="2">
+            <Text>This is how your discount rule will appear to customers on product pages.</Text>
+            <Text variant="bodySm" color="subdued">
+              {rule.scope === "all" 
+                ? "This rule will apply to all products"
+                : rule.scope === "products"
+                ? `This rule will apply to ${rule.productTitles?.length || 0} selected products`
+                : `This rule will apply to products in ${rule.collectionTitles?.length || 0} selected collections`}
+            </Text>
+          </VerticalStack>
         </Banner>
       </VerticalStack>
     </Card>
