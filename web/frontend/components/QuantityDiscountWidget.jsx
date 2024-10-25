@@ -14,7 +14,7 @@ import { useApi } from "../hooks/useApi";
 import "./styles/QuantityDiscountWidget.css";
 
 export function QuantityDiscountWidget({ product, shop }) {
-  const { addToCart, isLoading, error } = useApi();
+  const { addToCart, makeRequest, isLoading, error } = useApi();
   const [quantity, setQuantity] = useState(1);
   const [discountTiers, setDiscountTiers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +28,6 @@ export function QuantityDiscountWidget({ product, shop }) {
   useEffect(() => {
     const fetchDiscounts = async () => {
       try {
-        const { makeRequest } = useApi();
         const data = await makeRequest(
           `/api/discounts/calculate?shop=${shop}&productId=${productId}`
         );
@@ -43,7 +42,7 @@ export function QuantityDiscountWidget({ product, shop }) {
     if (productId && shop) {
       fetchDiscounts();
     }
-  }, [productId, shop]);
+  }, [productId, shop, makeRequest]);
 
   const handleAddToCart = async (qty) => {
     try {
