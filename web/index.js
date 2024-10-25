@@ -23,7 +23,9 @@ Shopify.Context.initialize({
     "write_products",
     "read_products",
     "read_price_rules",
-    "write_price_rules"
+    "write_price_rules",
+    "read_discounts",
+    "write_discounts"
   ],
   HOST_NAME: process.env.HOST?.replace(/https?:\/\//, ""),
   HOST_SCHEME: process.env.HOST?.split("://")[0] || "https",
@@ -40,87 +42,30 @@ app.use(express.json());
 app.use(logAccess);
 
 // Debug endpoint
-app.get("/debug", (req, res) => {
+app.get("/debug", (_req, res) => {
   res.json({
     env: {
       NODE_ENV: process.env.NODE_ENV,
       HOST: process.env.HOST,
+      PORT: process.env.PORT,
       SHOPIFY_API_KEY: process.env.SHOPIFY_API_KEY ? "Set" : "Not Set",
       SHOPIFY_API_SECRET: process.env.SHOPIFY_API_SECRET ? "Set" : "Not Set",
       SCOPES: process.env.SCOPES
     },
-    staticPath: {
-      path: STATIC_PATH,
-      exists: require('fs').existsSync(STATIC_PATH),
-      files: require('fs').existsSync(STATIC_PATH) ? 
-        require('fs').readdirSync(STATIC_PATH) : []
+    paths: {
+      static: STATIC_PATH,
+      current: process.cwd()
     }
   });
 });
 
 // Health check
 app.get("/health", (_req, res) => {
-  res.status(200).send("OK");
-});
-
-// Auth endpoints
-app.get("/auth", async (req, res) => {
-  try {
-    logAccess(req, res, () => {});
-    console.log("Auth request:", {
-      shop: req.query.shop,
-      host: req.query.host,
-      headers: req.headers
-    });
-
-    const authRoute = await Shopify.Auth.beginAuth(
-      req,
-      res,
-      req.query.shop,
-      "/auth/callback",
-      false
-    );
-    console.log("Auth route:", authRoute);
-    res.redirect(authRoute);
-  } catch (error) {
-    logError(error, req);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.get("/auth/callback", async (req, res) => {
-  try {
-    logAccess(req, res, () => {});
-    console.log("Auth callback request:", {
-      query: req.query,
-      headers: req.headers
-    });
-
-    const session = await Shopify.Auth.validateAuthCallback(
-      req,
-      res,
-      req.query
-    );
-    console.log("Auth session:", session);
-
-    const host = req.query.host;
-    const shop = session.shop;
-    res.redirect(`/?shop=${shop}&host=${host}`);
-  } catch (error) {
-    logError(error, req);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// CORS and security headers
-app.use((_req, res, next) => {
-  res.set("Access-Control-Allow-Origin", process.env.HOST);
-  res.set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
-  res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.set("X-Content-Type-Options", "nosniff");
-  res.set("X-Frame-Options", "DENY");
-  res.set("X-XSS-Protection", "1; mode=block");
-  next();
+  res.status(200).json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
 });
 
 // API routes
@@ -132,46 +77,24 @@ app.use(serveStatic(STATIC_PATH, { index: false }));
 // Serve frontend
 app.get("*", async (req, res) => {
   try {
-    logAccess(req, res, () => {});
     const shop = req.query.shop;
     
-    console.log("Frontend request:", {
-      url: req.url,
-      shop,
-      headers: req.headers
-    });
-
     if (!shop) {
-      console.log("No shop parameter, redirecting to auth");
       res.redirect(`/auth?shop=${shop}`);
       return;
     }
 
     const session = await Shopify.Utils.loadCurrentSession(req, res);
-    console.log("Session status:", {
-      exists: !!session,
-      shop: session?.shop,
-      isAuthenticated: session?.isAuthenticated
-    });
-
     if (!session && !req.url.includes("/auth")) {
-      console.log("No session, redirecting to auth");
       res.redirect(`/auth?shop=${shop}`);
       return;
     }
 
-    const indexPath = join(STATIC_PATH, "index.html");
-    console.log("Serving index from:", indexPath);
-
-    if (!require('fs').existsSync(indexPath)) {
-      throw new Error(`index.html not found at ${indexPath}`);
-    }
-
     res.set("Content-Type", "text/html");
-    res.send(readFileSync(indexPath));
+    res.send(readFileSync(join(STATIC_PATH, "index.html")));
   } catch (error) {
     logError(error, req);
-    res.status(500).json({ error: "Internal Server Error", details: error.message });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
