@@ -1,9 +1,11 @@
 import React from "react";
 import {
   Card,
-  TextStyle,
-  Stack,
+  Text,
+  VerticalStack,
+  HorizontalStack,
   Banner,
+  Box
 } from "@shopify/polaris";
 import "./styles/CartSummary.css";
 
@@ -32,8 +34,8 @@ export function CartSummary({ items, discounts }) {
 
   return (
     <Card sectioned>
-      <Stack vertical spacing="tight">
-        <TextStyle variation="strong">Cart Summary</TextStyle>
+      <VerticalStack gap="4">
+        <Text variant="headingMd">Cart Summary</Text>
 
         {/* Items Breakdown */}
         {items.map((item) => {
@@ -42,28 +44,30 @@ export function CartSummary({ items, discounts }) {
 
           return (
             <div key={item.productId} className="cart-item">
-              <Stack distribution="equalSpacing">
-                <Stack vertical spacing="extraTight">
-                  <TextStyle>{item.title}</TextStyle>
-                  <TextStyle variation="subdued">
+              <HorizontalStack align="space-between">
+                <VerticalStack gap="1">
+                  <Text variant="bodyMd">{item.title}</Text>
+                  <Text variant="bodySm" color="subdued">
                     Qty: {item.quantity} × ${item.price.toFixed(2)}
-                  </TextStyle>
-                </Stack>
-                <Stack vertical spacing="extraTight" alignment="trailing">
-                  <TextStyle>${calculateItemTotal(item).toFixed(2)}</TextStyle>
+                  </Text>
+                </VerticalStack>
+                <VerticalStack gap="1" align="end">
+                  <Text variant="bodyMd">${calculateItemTotal(item).toFixed(2)}</Text>
                   {savings > 0 && (
-                    <TextStyle variation="positive">
+                    <Text variant="bodySm" color="success">
                       Save ${savings.toFixed(2)}
-                    </TextStyle>
+                    </Text>
                   )}
-                </Stack>
-              </Stack>
+                </VerticalStack>
+              </HorizontalStack>
               {discount && (
-                <Banner status="success" icon={false}>
-                  {discount.type === "percentage"
-                    ? `${discount.value}% off ${discount.quantity}+ items`
-                    : `$${discount.value} off per item for ${discount.quantity}+ items`}
-                </Banner>
+                <Box paddingBlock="3">
+                  <Banner status="success" icon={false}>
+                    {discount.type === "percentage"
+                      ? `${discount.value}% off ${discount.quantity}+ items`
+                      : `$${discount.value} off per item for ${discount.quantity}+ items`}
+                  </Banner>
+                </Box>
               )}
             </div>
           );
@@ -71,34 +75,38 @@ export function CartSummary({ items, discounts }) {
 
         {/* Totals */}
         <div className="cart-totals">
-          <Stack distribution="equalSpacing">
-            <TextStyle>Subtotal</TextStyle>
-            <TextStyle>${subtotal.toFixed(2)}</TextStyle>
-          </Stack>
+          <HorizontalStack align="space-between">
+            <Text variant="bodyMd">Subtotal</Text>
+            <Text variant="bodyMd">${subtotal.toFixed(2)}</Text>
+          </HorizontalStack>
 
           {totalSavings > 0 && (
-            <Stack distribution="equalSpacing">
-              <TextStyle variation="positive">Total Savings</TextStyle>
-              <TextStyle variation="positive">-${totalSavings.toFixed(2)}</TextStyle>
-            </Stack>
+            <HorizontalStack align="space-between">
+              <Text variant="bodyMd" color="success">Total Savings</Text>
+              <Text variant="bodyMd" color="success">-${totalSavings.toFixed(2)}</Text>
+            </HorizontalStack>
           )}
 
-          <Stack distribution="equalSpacing">
-            <TextStyle variation="strong">Total</TextStyle>
-            <TextStyle variation="strong">${total.toFixed(2)}</TextStyle>
-          </Stack>
+          <Box paddingBlockStart="4">
+            <HorizontalStack align="space-between">
+              <Text variant="headingMd">Total</Text>
+              <Text variant="headingMd">${total.toFixed(2)}</Text>
+            </HorizontalStack>
+          </Box>
         </div>
 
         {/* Savings Summary */}
         {totalSavings > 0 && (
           <Banner status="success">
-            <p>You're saving ${totalSavings.toFixed(2)} with quantity discounts!</p>
-            <TextStyle variation="subdued">
-              {discounts.filter(d => d.discount).length} items have quantity discounts applied
-            </TextStyle>
+            <VerticalStack gap="2">
+              <Text>You're saving ${totalSavings.toFixed(2)} with quantity discounts!</Text>
+              <Text variant="bodySm" color="subdued">
+                {discounts.filter(d => d.discount).length} items have quantity discounts applied
+              </Text>
+            </VerticalStack>
           </Banner>
         )}
-      </Stack>
+      </VerticalStack>
     </Card>
   );
 }

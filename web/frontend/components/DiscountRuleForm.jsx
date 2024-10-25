@@ -7,15 +7,16 @@ import {
   TextField,
   Select,
   Button,
-  Stack,
+  VerticalStack,
+  HorizontalStack,
   Banner,
   ResourceList,
   ResourceItem,
-  TextStyle,
-  Tabs,
+  Text,
   Modal,
+  Box
 } from "@shopify/polaris";
-import { ResourcePicker } from "@shopify/app-bridge-react";
+import { ResourcePicker } from "./ResourcePicker";
 import { useAuthenticatedFetch } from "@shopify/app-bridge-react";
 import { useQuery, useMutation, useQueryClient } from "react-query";
 import { DiscountPreview } from './DiscountPreview';
@@ -34,7 +35,7 @@ export function DiscountRuleForm() {
     type: "percentage",
     quantity: "3",
     value: "10",
-    scope: "all", // 'all', 'products', 'collections'
+    scope: "all",
     productIds: [],
     productTitles: [],
     collectionIds: [],
@@ -165,7 +166,7 @@ export function DiscountRuleForm() {
       quantity: parseInt(formData.quantity),
       value: parseFloat(formData.value),
     });
-  }, [formData, selectedTab, createRule]);
+  }, [formData, selectedTab, createRule, tabs]);
 
   const handleResourceSelection = useCallback(
     (resources) => {
@@ -193,107 +194,113 @@ export function DiscountRuleForm() {
       <Layout>
         <Layout.Section>
           {error && (
-            <Banner status="critical" onDismiss={() => setError(null)}>
-              <p>{error}</p>
-            </Banner>
+            <Box paddingBlockEnd="4">
+              <Banner status="critical" onDismiss={() => setError(null)}>
+                <p>{error}</p>
+              </Banner>
+            </Box>
           )}
 
-          <Card sectioned>
+          <Card>
             <Tabs
               tabs={tabs}
               selected={selectedTab}
               onSelect={(index) => setSelectedTab(index)}
             />
 
-            <FormLayout>
-              <Select
-                label="Discount Type"
-                options={[
-                  { label: "Percentage", value: "percentage" },
-                  { label: "Fixed Amount", value: "fixed" },
-                ]}
-                value={formData.type}
-                onChange={(value) => setFormData({ ...formData, type: value })}
-              />
+            <Card.Section>
+              <FormLayout>
+                <Select
+                  label="Discount Type"
+                  options={[
+                    { label: "Percentage", value: "percentage" },
+                    { label: "Fixed Amount", value: "fixed" },
+                  ]}
+                  value={formData.type}
+                  onChange={(value) => setFormData({ ...formData, type: value })}
+                />
 
-              <TextField
-                label="Minimum Quantity"
-                type="number"
-                value={formData.quantity}
-                onChange={(value) => setFormData({ ...formData, quantity: value })}
-                min="1"
-                error={
-                  formData.quantity && parseInt(formData.quantity) < 1
-                    ? "Quantity must be at least 1"
-                    : undefined
-                }
-              />
+                <TextField
+                  label="Minimum Quantity"
+                  type="number"
+                  value={formData.quantity}
+                  onChange={(value) => setFormData({ ...formData, quantity: value })}
+                  min="1"
+                  error={
+                    formData.quantity && parseInt(formData.quantity) < 1
+                      ? "Quantity must be at least 1"
+                      : undefined
+                  }
+                />
 
-              <TextField
-                label={
-                  formData.type === "percentage"
-                    ? "Discount Percentage"
-                    : "Discount Amount"
-                }
-                type="number"
-                value={formData.value}
-                onChange={(value) => setFormData({ ...formData, value: value })}
-                prefix={formData.type === "percentage" ? "%" : "$"}
-                error={
-                  formData.type === "percentage" &&
-                  parseFloat(formData.value) > 100
-                    ? "Percentage cannot exceed 100%"
-                    : undefined
-                }
-              />
+                <TextField
+                  label={
+                    formData.type === "percentage"
+                      ? "Discount Percentage"
+                      : "Discount Amount"
+                  }
+                  type="number"
+                  value={formData.value}
+                  onChange={(value) => setFormData({ ...formData, value: value })}
+                  prefix={formData.type === "percentage" ? "%" : "$"}
+                  error={
+                    formData.type === "percentage" &&
+                    parseFloat(formData.value) > 100
+                      ? "Percentage cannot exceed 100%"
+                      : undefined
+                  }
+                />
 
-              {selectedTab === 1 && (
-                <>
-                  <Button
-                    onClick={() => {
-                      setResourceType("Product");
-                      setShowResourcePicker(true);
-                    }}
-                  >
-                    Select Products
-                  </Button>
-                  {formData.productTitles.length > 0 && (
-                    <TextStyle variation="subdued">
-                      Selected {formData.productTitles.length} products
-                    </TextStyle>
-                  )}
-                </>
-              )}
+                {selectedTab === 1 && (
+                  <VerticalStack gap="4">
+                    <Button
+                      onClick={() => {
+                        setResourceType("Product");
+                        setShowResourcePicker(true);
+                      }}
+                    >
+                      Select Products
+                    </Button>
+                    {formData.productTitles.length > 0 && (
+                      <Text variant="bodySm" color="subdued">
+                        Selected {formData.productTitles.length} products
+                      </Text>
+                    )}
+                  </VerticalStack>
+                )}
 
-              {selectedTab === 2 && (
-                <>
-                  <Button
-                    onClick={() => {
-                      setResourceType("Collection");
-                      setShowResourcePicker(true);
-                    }}
-                  >
-                    Select Collections
-                  </Button>
-                  {formData.collectionTitles.length > 0 && (
-                    <TextStyle variation="subdued">
-                      Selected {formData.collectionTitles.length} collections
-                    </TextStyle>
-                  )}
-                </>
-              )}
+                {selectedTab === 2 && (
+                  <VerticalStack gap="4">
+                    <Button
+                      onClick={() => {
+                        setResourceType("Collection");
+                        setShowResourcePicker(true);
+                      }}
+                    >
+                      Select Collections
+                    </Button>
+                    {formData.collectionTitles.length > 0 && (
+                      <Text variant="bodySm" color="subdued">
+                        Selected {formData.collectionTitles.length} collections
+                      </Text>
+                    )}
+                  </VerticalStack>
+                )}
 
-              <Stack distribution="trailing">
-                <Button primary onClick={handleSubmit} loading={createRule.isLoading}>
-                  Create Discount Rule
-                </Button>
-              </Stack>
-            </FormLayout>
+                <Box paddingBlockStart="4">
+                  <HorizontalStack align="end">
+                    <Button primary onClick={handleSubmit} loading={createRule.isLoading}>
+                      Create Discount Rule
+                    </Button>
+                  </HorizontalStack>
+                </Box>
+              </FormLayout>
+            </Card.Section>
           </Card>
 
           {/* Preview Section */}
           {formData.quantity && formData.value && (
-            <div style={{ marginTop: "2rem" }}>
+            <Box paddingBlockStart="4">
               <DiscountPreview
                 rule={{
                   ...formData,
@@ -302,7 +309,7 @@ export function DiscountRuleForm() {
                   value: parseFloat(formData.value),
                 }}
               />
-            </div>
+            </Box>
           )}
         </Layout.Section>
 
@@ -313,30 +320,30 @@ export function DiscountRuleForm() {
               items={rulesData?.rules || []}
               renderItem={(rule) => (
                 <ResourceItem id={rule.id}>
-                  <Stack distribution="equalSpacing" alignment="center">
-                    <Stack vertical spacing="extraTight">
-                      <TextStyle variation="strong">
+                  <HorizontalStack align="space-between">
+                    <VerticalStack gap="1">
+                      <Text variant="bodyMd" fontWeight="bold">
                         {rule.type === "percentage"
                           ? `${rule.value}% off`
                           : `$${rule.value} off`}
                         {" when buying "}
                         {rule.quantity}+ items
-                      </TextStyle>
-                      <TextStyle variation="subdued">
+                      </Text>
+                      <Text variant="bodySm" color="subdued">
                         {rule.scope === "all"
                           ? "Applied to all products"
                           : rule.scope === "products"
                           ? `Applied to ${rule.productTitles?.length || 0} products`
                           : `Applied to ${rule.collectionTitles?.length || 0} collections`}
-                      </TextStyle>
-                    </Stack>
+                      </Text>
+                    </VerticalStack>
                     <Button
                       destructive
                       onClick={() => handleDeleteClick(rule.id)}
                     >
                       Delete
                     </Button>
-                  </Stack>
+                  </HorizontalStack>
                 </ResourceItem>
               )}
             />
@@ -374,7 +381,7 @@ export function DiscountRuleForm() {
           ]}
         >
           <Modal.Section>
-            <p>Are you sure you want to delete this discount rule?</p>
+            <Text>Are you sure you want to delete this discount rule?</Text>
           </Modal.Section>
         </Modal>
       )}

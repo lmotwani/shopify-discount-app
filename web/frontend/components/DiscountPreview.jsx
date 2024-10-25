@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import {
   Card,
-  TextStyle,
-  Stack,
+  Text,
+  VerticalStack,
   Banner,
   Select,
   Button,
+  TextField,
+  HorizontalStack,
+  Box
 } from "@shopify/polaris";
 import "./styles/QuantityDiscountWidget.css";
 
@@ -39,8 +42,8 @@ export function DiscountPreview({ rule }) {
 
   return (
     <Card sectioned title="Preview Widget">
-      <Stack vertical spacing="loose">
-        <Stack distribution="equalSpacing">
+      <VerticalStack gap="4">
+        <HorizontalStack align="space-between">
           <TextField
             label="Sample Product Price"
             type="number"
@@ -48,19 +51,25 @@ export function DiscountPreview({ rule }) {
             onChange={(value) => setPreviewPrice(parseFloat(value) || 0)}
             prefix="$"
           />
-        </Stack>
+        </HorizontalStack>
 
         <div className="quantity-widget preview-widget">
           <div className="widget-header">
-            <h2 className="best-price">
-              ${(calculateDiscountedPrice(rule.quantity) / rule.quantity).toFixed(2)} per item
-            </h2>
-            <div className="original-price">${previewPrice.toFixed(2)} regular price</div>
-            {calculateSavings(rule.quantity) > 0 && (
-              <div className="save-badge">
-                SAVE ${(calculateSavings(rule.quantity) / rule.quantity).toFixed(2)} per item
-              </div>
-            )}
+            <Box>
+              <Text variant="headingLg" as="h2">
+                ${(calculateDiscountedPrice(rule.quantity) / rule.quantity).toFixed(2)} per item
+              </Text>
+              <Text variant="bodyMd" color="subdued">
+                ${previewPrice.toFixed(2)} regular price
+              </Text>
+              {calculateSavings(rule.quantity) > 0 && (
+                <Box className="save-badge">
+                  <Text variant="bodyMd" color="success">
+                    SAVE ${(calculateSavings(rule.quantity) / rule.quantity).toFixed(2)} per item
+                  </Text>
+                </Box>
+              )}
+            </Box>
           </div>
 
           <div className="quantity-section">
@@ -116,15 +125,15 @@ export function DiscountPreview({ rule }) {
 
         <Banner status="info">
           <p>This is how your discount rule will appear to customers on product pages.</p>
-          <TextStyle variation="subdued">
+          <Text variant="bodySm" color="subdued">
             {rule.scope === "all" 
               ? "This rule will apply to all products"
               : rule.scope === "products"
               ? `This rule will apply to ${rule.productTitles?.length || 0} selected products`
               : `This rule will apply to products in ${rule.collectionTitles?.length || 0} selected collections`}
-          </TextStyle>
+          </Text>
         </Banner>
-      </Stack>
+      </VerticalStack>
     </Card>
   );
 }
