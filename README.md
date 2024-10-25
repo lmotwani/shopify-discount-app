@@ -1,107 +1,133 @@
-# Quantity Based Discounts for Shopify
+# Shopify Quantity Discount App
 
-Boost your sales by offering quantity-based discounts! Encourage customers to buy more with automatic discounts that increase with quantity.
+A Shopify app that enables merchants to offer dynamic quantity-based discounts on their products. This app helps increase average order value by incentivizing customers to buy more with automatic discounts.
 
-## 🎯 Key Features
+## Features
 
-### Flexible Discount Rules
-* Create percentage or fixed amount discounts
-* Set different discounts for different quantity tiers
-* Example: 10% off for 3+ items, 15% off for 6+, 20% off for 12+
+### For Store Owners
+- Create flexible quantity-based discount rules
+  - Set minimum quantity thresholds (e.g., 3+, 6+, 12+ items)
+  - Choose between percentage or fixed amount discounts
+  - Apply to all products or specific products/collections
+  - Multiple discount tiers per product
+  - Easy rule management through admin interface
 
-### Easy Setup
-* Install and configure in minutes
-* No coding required
-* Works with any Shopify theme
+### For Customers
+- Clear discount display on product pages
+  - See available quantity discounts
+  - Real-time price calculations
+  - Automatic discount application
+  - Easy quantity selection
+  - Total savings display
 
-### Smart Discount Display
-* Shows available discounts on product pages
-* Updates automatically in cart
-* Clear savings display encourages larger purchases
+### Discount Types
+- Percentage discounts (e.g., 20% off when buying 6+ items)
+- Fixed amount discounts (e.g., $5 off per item when buying 3+)
+- Mix and match discounts across products
+- Collection-wide discounts
 
-## 💡 Use Cases
+### Cart Features
+- Automatic discount calculations
+- Clear savings breakdown
+- Per-item and total discount display
+- Multiple discount support
+- Real-time updates
 
-1. **Bundle Deals**
-   * Encourage bulk purchases
-   * "Buy 3 get 10% off, Buy 6 get 15% off"
+## Project Structure
 
-2. **Wholesale Pricing**
-   * Offer tiered pricing for larger quantities
-   * Different discounts for different customer groups
+```
+/web
+├── frontend/           # React frontend
+│   ├── components/    # UI components
+│   │   ├── DiscountRuleForm.jsx    # Discount rule management
+│   │   ├── QuantityDiscountWidget.jsx  # Product page widget
+│   │   └── CartSummary.jsx         # Cart calculations
+│   ├── hooks/        # Custom hooks
+│   ├── pages/        # Page components
+│   └── providers/    # Context providers
+├── database/          # Database setup
+├── middleware/        # Express middleware
+└── routes/           # API routes
+```
 
-3. **Collection Promotions**
-   * Apply discounts to entire collections
-   * Perfect for seasonal sales
+## Installation
 
-## 📱 Screenshots
+1. Install dependencies:
+```bash
+npm install
+```
 
-[Screenshots of the app interface and customer-facing displays will be added here]
+2. Set up environment variables:
+```bash
+cp .env.example .env
+# Edit .env with your credentials
+```
 
-## ⚙️ Installation
+3. Build frontend:
+```bash
+npm run build
+```
 
-1. Install the app from the Shopify App Store
-2. Select products or collections for discounts
-3. Set your quantity tiers and discount amounts
-4. Publish your discounts
+4. Start server:
+```bash
+npm start
+```
 
-## 💰 Pricing
+## Development
 
-* 14-day free trial
-* Simple pricing: $X.XX per month
-* No hidden fees
+```bash
+# Start development server
+npm run dev
 
-## 🔒 Security
+# Build for production
+npm run build
+```
 
-* Secure data handling
-* Regular backups
-* Compliant with Shopify's security requirements
+## Environment Variables
 
-## 📞 Support
+Required environment variables:
+- SHOPIFY_API_KEY - Your Shopify API key
+- SHOPIFY_API_SECRET - Your Shopify API secret
+- HOST - Your app's host URL
+- SCOPES - Required Shopify access scopes
+- PORT - Server port (default: 3000)
+- NODE_ENV - Environment (development/production)
+- DATABASE_URL - SQLite database path
 
-* Email support: support@example.com
-* Response time: Within 24 hours
-* Documentation: [Link to documentation]
+## Example Usage
 
-## 🔄 Updates
+### Creating a Discount Rule
+1. Access the app in Shopify admin
+2. Click "Create Discount Rule"
+3. Set:
+   - Minimum quantity (e.g., 6)
+   - Discount type (percentage/fixed)
+   - Discount value (e.g., 20%)
+   - Apply to (all/specific products/collections)
+4. Save rule
 
-We regularly update the app with new features and improvements based on merchant feedback.
+### Customer Experience
+1. Customer views product
+2. Sees available quantity discounts
+3. Selects quantity
+4. Sees total savings
+5. Adds to cart with discount applied
 
-## 📊 Benefits
+## Technical Details
 
-* Increase average order value
-* Boost customer satisfaction
-* Save time with automatic discount application
-* Track performance with built-in analytics
+- Built with React and Express
+- Uses SQLite for data storage
+- Integrates with Shopify Admin API
+- Real-time price calculations
+- Responsive design
+- Error handling and logging
+- Session management
+- Secure authentication
 
-## 🌟 Merchant Success Stories
+## Support
 
-"This app helped increase our average order value by 25% in the first month!" - [Merchant Name]
+For support, contact: [Your Support Email]
 
-## 🤝 Privacy Policy
+## License
 
-We take your privacy seriously. [Link to Privacy Policy]
-
-## ❓ FAQ
-
-**Q: Will this work with my theme?**
-A: Yes, our app works with all Shopify themes.
-
-**Q: Can I offer different discounts for different products?**
-A: Yes, you can set unique discount tiers for individual products or collections.
-
-**Q: How do I contact support?**
-A: Email us at support@example.com or use the in-app chat.
-
-## 🔧 Requirements
-
-* Shopify Store on any plan
-* Products with variants supported
-* Works with all standard Shopify themes
-
-## 🚀 Getting Started
-
-1. Install the app
-2. Create your first discount rule
-3. Watch your sales grow!
-
-For detailed setup instructions, visit our [Help Center].
+This project is licensed under the MIT License - see the LICENSE file for details.

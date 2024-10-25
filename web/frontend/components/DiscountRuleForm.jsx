@@ -12,36 +12,62 @@ import {
   ResourceList,
   ResourceItem,
   TextStyle,
-  SkeletonBodyText,
+  Tabs,
+  Modal,
 } from "@shopify/polaris";
+import { ResourcePicker } from "@shopify/app-bridge-react";
 import { useAuthenticatedFetch } from "@shopify/app-bridge-react";
 import { useQuery, useMutation, useQueryClient } from "react-query";
-import { ResourcePicker } from "./ResourcePicker";
+import { DiscountPreview } from './DiscountPreview';
 
 export function DiscountRuleForm() {
   const fetch = useAuthenticatedFetch();
   const queryClient = useQueryClient();
+  const [selectedTab, setSelectedTab] = useState(0);
+  const [showResourcePicker, setShowResourcePicker] = useState(false);
+  const [resourceType, setResourceType] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedRuleId, setSelectedRuleId] = useState(null);
+  const [error, setError] = useState(null);
+
   const [formData, setFormData] = useState({
     type: "percentage",
     quantity: "3",
     value: "10",
-    productId: "",
-    productTitle: "",
-    collectionId: "",
-    collectionTitle: "",
-    scope: "all", // 'all', 'product', or 'collection'
+    scope: "all", // 'all', 'products', 'collections'
+    productIds: [],
+    productTitles: [],
+    collectionIds: [],
+    collectionTitles: [],
   });
-  const [error, setError] = useState(null);
+
+  const tabs = [
+    {
+      id: "all",
+      content: "All Products",
+      accessibilityLabel: "All products",
+      panelID: "all-products-content",
+    },
+    {
+      id: "specific",
+      content: "Specific Products",
+      accessibilityLabel: "Specific products",
+      panelID: "specific-products-content",
+    },
+    {
+      id: "collections",
+      content: "Collections",
+      accessibilityLabel: "Collections",
+      panelID: "collections-content",
+    },
+  ];
 
   // Fetch existing rules
-  const {
-    data: rulesData,
-    isLoading,
-    error: fetchError,
-  } = useQuery("discountRules", async () => {
+  const { data: rulesData, isLoading } = useQuery("discountRules", async () => {
     const response = await fetch("/api/discounts");
     if (!response.ok) {
-      throw new Error("Failed to fetch discount rules");
+      const error = await response.json();
+      throw new Error(error.message || "Failed to fetch discount rules");
     }
     return response.json();
   });
@@ -55,8 +81,8 @@ export function DiscountRuleForm() {
         body: JSON.stringify(data),
       });
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create discount rule");
+        const error = await response.json();
+        throw new Error(error.message || "Failed to create discount rule");
       }
       return response.json();
     },
@@ -67,16 +93,16 @@ export function DiscountRuleForm() {
           type: "percentage",
           quantity: "3",
           value: "10",
-          productId: "",
-          productTitle: "",
-          collectionId: "",
-          collectionTitle: "",
           scope: "all",
+          productIds: [],
+          productTitles: [],
+          collectionIds: [],
+          collectionTitles: [],
         });
         setError(null);
       },
-      onError: (err) => {
-        setError(err.message);
+      onError: (error) => {
+        setError(error.message);
       },
     }
   );
@@ -88,127 +114,98 @@ export function DiscountRuleForm() {
         method: "DELETE",
       });
       if (!response.ok) {
-        throw new Error("Failed to delete discount rule");
+        const error = await response.json();
+        throw new Error(error.message || "Failed to delete discount rule");
       }
     },
     {
       onSuccess: () => {
         queryClient.invalidateQueries("discountRules");
+        setShowDeleteModal(false);
+        setSelectedRuleId(null);
+        setError(null);
       },
-      onError: (err) => {
-        setError(err.message);
+      onError: (error) => {
+        setError(error.message);
       },
     }
   );
 
   const handleSubmit = useCallback(() => {
     // Validate form
-    if (!formData.quantity || !formData.value) {
-      setError("Quantity and value are required");
+    if (!formData.quantity || parseInt(formData.quantity) < 1) {
+      setError("Quantity must be at least 1");
       return;
     }
 
-    if (formData.type === "percentage" && (formData.value < 0 || formData.value > 100)) {
-      setError("Percentage must be between 0 and 100");
+    if (!formData.value || parseFloat(formData.value) <= 0) {
+      setError("Discount value must be greater than 0");
       return;
     }
 
-    if (formData.scope === "product" && !formData.productId) {
-      setError("Please select a product");
+    if (formData.type === "percentage" && parseFloat(formData.value) > 100) {
+      setError("Percentage discount cannot exceed 100%");
       return;
     }
 
-    if (formData.scope === "collection" && !formData.collectionId) {
-      setError("Please select a collection");
+    const scope = tabs[selectedTab].id;
+    if (scope === "specific" && formData.productIds.length === 0) {
+      setError("Please select at least one product");
       return;
     }
 
-    createRule.mutate(formData);
-  }, [formData, createRule]);
+    if (scope === "collections" && formData.collectionIds.length === 0) {
+      setError("Please select at least one collection");
+      return;
+    }
 
-  const handleResourceSelect = useCallback((resource, type) => {
-    setFormData(prev => ({
-      ...prev,
-      [`${type}Id`]: resource.id,
-      [`${type}Title`]: resource.title,
-    }));
+    createRule.mutate({
+      ...formData,
+      scope,
+      quantity: parseInt(formData.quantity),
+      value: parseFloat(formData.value),
+    });
+  }, [formData, selectedTab, createRule]);
+
+  const handleResourceSelection = useCallback(
+    (resources) => {
+      const ids = resources.selection.map((item) => item.id);
+      const titles = resources.selection.map((item) => item.title);
+
+      setFormData((prev) => ({
+        ...prev,
+        ...(resourceType === "Product"
+          ? { productIds: ids, productTitles: titles }
+          : { collectionIds: ids, collectionTitles: titles }),
+      }));
+      setShowResourcePicker(false);
+    },
+    [resourceType]
+  );
+
+  const handleDeleteClick = useCallback((id) => {
+    setSelectedRuleId(id);
+    setShowDeleteModal(true);
   }, []);
 
-  if (isLoading) {
-    return (
-      <Page title="Quantity Discounts">
-        <Layout>
-          <Layout.Section>
-            <Card sectioned>
-              <SkeletonBodyText lines={6} />
-            </Card>
-          </Layout.Section>
-        </Layout>
-      </Page>
-    );
-  }
-
-  if (fetchError) {
-    return (
-      <Page title="Quantity Discounts">
-        <Layout>
-          <Layout.Section>
-            <Banner status="critical">
-              <p>Failed to load discount rules. Please try again later.</p>
-            </Banner>
-          </Layout.Section>
-        </Layout>
-      </Page>
-    );
-  }
-
   return (
-    <Page title="Quantity Discounts">
+    <Page title="Quantity Discount Rules">
       <Layout>
         <Layout.Section>
+          {error && (
+            <Banner status="critical" onDismiss={() => setError(null)}>
+              <p>{error}</p>
+            </Banner>
+          )}
+
           <Card sectioned>
+            <Tabs
+              tabs={tabs}
+              selected={selectedTab}
+              onSelect={(index) => setSelectedTab(index)}
+            />
+
             <FormLayout>
-              {error && (
-                <Banner status="critical" onDismiss={() => setError(null)}>
-                  <p>{error}</p>
-                </Banner>
-              )}
-
-              <Select
-                label="Apply To"
-                options={[
-                  { label: "All Products", value: "all" },
-                  { label: "Specific Product", value: "product" },
-                  { label: "Specific Collection", value: "collection" },
-                ]}
-                value={formData.scope}
-                onChange={(value) => setFormData({ ...formData, scope: value })}
-              />
-
-              {formData.scope === "product" && (
-                <ResourcePicker
-                  type="Product"
-                  onSelect={(resource) => handleResourceSelect(resource, "product")}
-                  selectedResource={
-                    formData.productId
-                      ? { id: formData.productId, title: formData.productTitle }
-                      : null
-                  }
-                />
-              )}
-
-              {formData.scope === "collection" && (
-                <ResourcePicker
-                  type="Collection"
-                  onSelect={(resource) => handleResourceSelect(resource, "collection")}
-                  selectedResource={
-                    formData.collectionId
-                      ? { id: formData.collectionId, title: formData.collectionTitle }
-                      : null
-                  }
-                />
-              )}
-
               <Select
                 label="Discount Type"
                 options={[
@@ -225,34 +222,88 @@ export function DiscountRuleForm() {
                 value={formData.quantity}
                 onChange={(value) => setFormData({ ...formData, quantity: value })}
                 min="1"
-                error={formData.quantity < 1 ? "Quantity must be at least 1" : undefined}
+                error={
+                  formData.quantity && parseInt(formData.quantity) < 1
+                    ? "Quantity must be at least 1"
+                    : undefined
+                }
               />
 
               <TextField
-                label={formData.type === "percentage" ? "Discount (%)" : "Discount Amount ($)"}
+                label={
+                  formData.type === "percentage"
+                    ? "Discount Percentage"
+                    : "Discount Amount"
+                }
                 type="number"
                 value={formData.value}
                 onChange={(value) => setFormData({ ...formData, value: value })}
-                min="0"
-                max={formData.type === "percentage" ? "100" : undefined}
+                prefix={formData.type === "percentage" ? "%" : "$"}
                 error={
-                  formData.type === "percentage" && formData.value > 100
+                  formData.type === "percentage" &&
+                  parseFloat(formData.value) > 100
                     ? "Percentage cannot exceed 100%"
                     : undefined
                 }
               />
 
+              {selectedTab === 1 && (
+                <>
+                  <Button
+                    onClick={() => {
+                      setResourceType("Product");
+                      setShowResourcePicker(true);
+                    }}
+                  >
+                    Select Products
+                  </Button>
+                  {formData.productTitles.length > 0 && (
+                    <TextStyle variation="subdued">
+                      Selected {formData.productTitles.length} products
+                    </TextStyle>
+                  )}
+                </>
+              )}
+
+              {selectedTab === 2 && (
+                <>
+                  <Button
+                    onClick={() => {
+                      setResourceType("Collection");
+                      setShowResourcePicker(true);
+                    }}
+                  >
+                    Select Collections
+                  </Button>
+                  {formData.collectionTitles.length > 0 && (
+                    <TextStyle variation="subdued">
+                      Selected {formData.collectionTitles.length} collections
+                    </TextStyle>
+                  )}
+                </>
+              )}
+
               <Stack distribution="trailing">
-                <Button
-                  primary
-                  onClick={handleSubmit}
-                  loading={createRule.isLoading}
-                >
+                <Button primary onClick={handleSubmit} loading={createRule.isLoading}>
                   Create Discount Rule
                 </Button>
               </Stack>
             </FormLayout>
           </Card>
+
+          {/* Preview Section */}
+          {formData.quantity && formData.value && (
+            <div style={{ marginTop: "2rem" }}>
+              <DiscountPreview
+                rule={{
+                  ...formData,
+                  scope: tabs[selectedTab].id,
+                  quantity: parseInt(formData.quantity),
+                  value: parseFloat(formData.value),
+                }}
+              />
+            </div>
+          )}
         </Layout.Section>
 
         <Layout.Section>
@@ -268,23 +319,20 @@ export function DiscountRuleForm() {
                         {rule.type === "percentage"
                           ? `${rule.value}% off`
                           : `$${rule.value} off`}
+                        {" when buying "}
+                        {rule.quantity}+ items
                       </TextStyle>
-                      <TextStyle>When buying {rule.quantity}+ items</TextStyle>
-                      {rule.productTitle && (
-                        <TextStyle variation="subdued">
-                          Product: {rule.productTitle}
-                        </TextStyle>
-                      )}
-                      {rule.collectionTitle && (
-                        <TextStyle variation="subdued">
-                          Collection: {rule.collectionTitle}
-                        </TextStyle>
-                      )}
+                      <TextStyle variation="subdued">
+                        {rule.scope === "all"
+                          ? "Applied to all products"
+                          : rule.scope === "products"
+                          ? `Applied to ${rule.productTitles?.length || 0} products`
+                          : `Applied to ${rule.collectionTitles?.length || 0} collections`}
+                      </TextStyle>
                     </Stack>
                     <Button
                       destructive
-                      onClick={() => deleteRule.mutate(rule.id)}
-                      loading={deleteRule.isLoading}
+                      onClick={() => handleDeleteClick(rule.id)}
                     >
                       Delete
                     </Button>
@@ -295,6 +343,41 @@ export function DiscountRuleForm() {
           </Card>
         </Layout.Section>
       </Layout>
+
+      {showResourcePicker && (
+        <ResourcePicker
+          resourceType={resourceType}
+          open={showResourcePicker}
+          onCancel={() => setShowResourcePicker(false)}
+          onSelection={handleResourceSelection}
+          showVariants={false}
+          allowMultiple
+        />
+      )}
+
+      {showDeleteModal && (
+        <Modal
+          open={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          title="Delete Discount Rule"
+          primaryAction={{
+            content: "Delete",
+            onAction: () => deleteRule.mutate(selectedRuleId),
+            destructive: true,
+            loading: deleteRule.isLoading,
+          }}
+          secondaryActions={[
+            {
+              content: "Cancel",
+              onAction: () => setShowDeleteModal(false),
+            },
+          ]}
+        >
+          <Modal.Section>
+            <p>Are you sure you want to delete this discount rule?</p>
+          </Modal.Section>
+        </Modal>
+      )}
     </Page>
   );
 }
