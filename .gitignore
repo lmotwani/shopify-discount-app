@@ -1,30 +1,18 @@
-# Dependencies
-node_modules/
-/.pnp
-.pnp.js
+# Environment Configuration
+.env
+.env.*
 
-# Testing
-/coverage
+# Dependency directory
+node_modules
+web/node_modules
+web/frontend/node_modules
 
-# Production
-/build
-/dist
+# Build output
+dist/
 web/frontend/dist/
-web/frontend/.vite/
-
-# Database
+build/
 *.sqlite
 *.sqlite3
-web/database/*.sqlite
-web/database/*.sqlite3
-web/database/sessions.sqlite
-
-# Environment files
-.env
-.env.local
-.env.development
-.env.test
-.env.production
 
 # Logs
 logs
@@ -33,40 +21,54 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-error.log
-access.log
 
 # Editor directories and files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+.idea
 .DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Testing
+coverage/
 
 # Temporary files
-.temp
+*.tmp
+*.temp
 .cache
-.eslintcache
-
-# System Files
-.DS_Store
-Thumbs.db
-
-# Deployment files
-ecosystem.config.js
-ecosystem.config.cjs
-pm2.config.js
-apache_config.conf
-
-# Documentation (keep only README.md)
-*.md
-!README.md
-
-# Backup files
-*.bak
-*.backup
-*~
 
 # Local development
-.local/
+.shopify/*
+.shopify.lock
+
+# Server files
+aapanel_website_config.conf
+DEPLOYMENT.md
+DEPLOYMENT_STEPS.md
+AAPANEL_COMMANDS.md
+AAPANEL_FIXES.md
+SHOPIFY_CONFIG.md
+EXACT_CONFIG.md
+START_APP.md
+PM2_FIX.md
+PM2_CORRECT.md
+SERVER_FIX.md
+MODULE_FIX.md
+NEXT_STEPS.md
+SHOPIFY_CONFIG_VALUES.md
+TESTING_STEPS.md
+DEPLOYMENT_GUIDE.md
+CODE_CLEANUP.md
+FINAL_CHECK.md
+GIT_CHECK.md
+COMPLETE_PROCESS.md
+cleanup.sh
+
+# Database
+database.sqlite
+web/database.sqlite

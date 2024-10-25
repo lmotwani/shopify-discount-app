@@ -13,7 +13,8 @@ import {
   PageActions,
   Frame,
   Toast,
-  Loading
+  Loading,
+  ChoiceList
 } from "@shopify/polaris";
 import { useApi } from "../hooks/useApi";
 import { useTranslation } from "react-i18next";
@@ -24,7 +25,9 @@ export function DiscountRuleForm() {
   const { t } = useTranslation();
   const { createDiscountRule } = useApi();
   const [selectedProducts, setSelectedProducts] = useState([]);
+  const [selectedCollections, setSelectedCollections] = useState([]);
   const [showResourcePicker, setShowResourcePicker] = useState(false);
+  const [resourceType, setResourceType] = useState("products");
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [formData, setFormData] = useState({
@@ -38,7 +41,8 @@ export function DiscountRuleForm() {
     try {
       const data = {
         ...formData,
-        product_ids: selectedProducts.map(p => p.id).join(","),
+        product_ids: formData.scope === "products" ? selectedProducts.map(p => p.id).join(",") : null,
+        collection_ids: formData.scope === "collections" ? selectedCollections.map(c => c.id).join(",") : null,
       };
       await createDiscountRule.mutateAsync(data);
       setToastMessage(t("discountRule.createSuccess"));
@@ -50,14 +54,21 @@ export function DiscountRuleForm() {
         scope: "all",
       });
       setSelectedProducts([]);
+      setSelectedCollections([]);
     } catch (error) {
       setToastMessage(t("discountRule.createError"));
       setShowToast(true);
     }
-  }, [formData, selectedProducts, createDiscountRule, t]);
+  }, [formData, selectedProducts, selectedCollections, createDiscountRule, t]);
 
   const handleChange = useCallback((value, name) => {
     setFormData(prev => ({ ...prev, [name]: value }));
+  }, []);
+
+  const handleScopeChange = useCallback((value) => {
+    setFormData(prev => ({ ...prev, scope: value }));
+    setSelectedProducts([]);
+    setSelectedCollections([]);
   }, []);
 
   const toastMarkup = showToast ? (
@@ -112,24 +123,33 @@ export function DiscountRuleForm() {
                       autoComplete="off"
                     />
 
-                    <Select
-                      label={t("discountRule.scope")}
-                      options={[
+                    <ChoiceList
+                      title={t("discountRule.scope")}
+                      choices={[
                         { label: t("discountRule.allProducts"), value: "all" },
                         { label: t("discountRule.specificProducts"), value: "products" },
+                        { label: t("discountRule.collections"), value: "collections" },
                       ]}
-                      value={formData.scope}
-                      onChange={value => handleChange(value, "scope")}
+                      selected={[formData.scope]}
+                      onChange={([value]) => handleScopeChange(value)}
                     />
 
-                    {formData.scope === "products" && (
+                    {formData.scope !== "all" && (
                       <Stack vertical>
-                        <Button onClick={() => setShowResourcePicker(true)}>
-                          {t("discountRule.selectProducts")}
+                        <Button onClick={() => {
+                          setResourceType(formData.scope);
+                          setShowResourcePicker(true);
+                        }}>
+                          {formData.scope === "products" 
+                            ? t("discountRule.selectProducts")
+                            : t("discountRule.selectCollections")}
                         </Button>
-                        {selectedProducts.length > 0 && (
+                        {((formData.scope === "products" && selectedProducts.length > 0) ||
+                          (formData.scope === "collections" && selectedCollections.length > 0)) && (
                           <Banner status="info">
-                            {t("discountRule.selectedProducts", { count: selectedProducts.length })}
+                            {formData.scope === "products"
+                              ? t("discountRule.selectedProducts", { count: selectedProducts.length })
+                              : t("discountRule.selectedCollections", { count: selectedCollections.length })}
                           </Banner>
                         )}
                       </Stack>
@@ -153,7 +173,8 @@ export function DiscountRuleForm() {
             <DiscountPreview
               rule={{
                 ...formData,
-                product_ids: selectedProducts.map(p => p.id).join(",")
+                product_ids: selectedProducts.map(p => p.id).join(","),
+                collection_ids: selectedCollections.map(c => c.id).join(",")
               }}
             />
           </Layout.Section>
@@ -161,10 +182,15 @@ export function DiscountRuleForm() {
       </Page>
 
       <ResourcePicker
+        resourceType={resourceType}
         open={showResourcePicker}
         onCancel={() => setShowResourcePicker(false)}
         onSelection={(resources) => {
-          setSelectedProducts(resources.selection);
+          if (resourceType === "products") {
+            setSelectedProducts(resources.selection);
+          } else {
+            setSelectedCollections(resources.selection);
+          }
           setShowResourcePicker(false);
         }}
       />
