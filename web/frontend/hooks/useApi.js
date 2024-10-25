@@ -1,45 +1,84 @@
 import { useAuthenticatedFetch } from "@shopify/app-bridge-react";
-import { useMemo } from "react";
+import { useState, useCallback } from "react";
 
-export const useApi = () => {
+export function useApi() {
   const fetch = useAuthenticatedFetch();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  return useMemo(
-    () => ({
-      // Fetch all discount rules
-      getDiscountRules: async () => {
-        const response = await fetch("/api/discounts");
-        return response.json();
-      },
+  const makeRequest = useCallback(async (endpoint, options = {}) => {
+    setIsLoading(true);
+    setError(null);
 
-      // Create a new discount rule
-      createDiscountRule: async (data) => {
-        const response = await fetch("/api/discounts", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        });
-        return response.json();
-      },
+    try {
+      const response = await fetch(endpoint, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+      });
 
-      // Delete a discount rule
-      deleteDiscountRule: async (id) => {
-        const response = await fetch(`/api/discounts/${id}`, {
-          method: "DELETE",
-        });
-        return response.ok;
-      },
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'An error occurred');
+      }
 
-      // Calculate discount for a product
-      calculateDiscount: async (productId, quantity) => {
-        const response = await fetch(
-          `/api/discounts/calculate?productId=${productId}&quantity=${quantity}`
-        );
-        return response.json();
-      },
-    }),
-    [fetch]
-  );
-};
+      const data = await response.json();
+      return data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetch]);
+
+  const addToCart = useCallback(async (variantId, quantity) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // First check if item exists in cart
+      const cartResponse = await fetch('/cart.js');
+      const cart = await cartResponse.json();
+      
+      // Add items to cart
+      const response = await fetch('/cart/add.js', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: [{
+            id: variantId,
+            quantity: quantity
+          }]
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to add to cart');
+      }
+
+      // Get updated cart
+      const updatedCartResponse = await fetch('/cart.js');
+      const updatedCart = await updatedCartResponse.json();
+
+      return updatedCart;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetch]);
+
+  return {
+    makeRequest,
+    addToCart,
+    isLoading,
+    error,
+  };
+}

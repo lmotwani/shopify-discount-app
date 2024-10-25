@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useAuthenticatedFetch } from "@shopify/app-bridge-react";
 import {
   VerticalStack,
   HorizontalStack,
@@ -7,31 +6,35 @@ import {
   Button,
   Select,
   Box,
-  Banner
+  Banner,
+  Loading,
+  Toast
 } from "@shopify/polaris";
+import { useApi } from "../hooks/useApi";
 import "./styles/QuantityDiscountWidget.css";
 
 export function QuantityDiscountWidget({ product, shop }) {
-  const fetch = useAuthenticatedFetch();
+  const { addToCart, isLoading, error } = useApi();
   const [quantity, setQuantity] = useState(1);
   const [discountTiers, setDiscountTiers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   const basePrice = product?.variants[0]?.price || 0;
   const productId = product?.id;
+  const variantId = product?.variants[0]?.id;
 
   useEffect(() => {
     const fetchDiscounts = async () => {
       try {
-        const response = await fetch(
+        const { makeRequest } = useApi();
+        const data = await makeRequest(
           `/api/discounts/calculate?shop=${shop}&productId=${productId}`
         );
-        if (!response.ok) throw new Error("Failed to fetch discounts");
-        const data = await response.json();
         setDiscountTiers(data.tiers.filter(tier => tier.rule));
       } catch (err) {
-        setError(err.message);
+        console.error('Error fetching discounts:', err);
       } finally {
         setLoading(false);
       }
@@ -40,7 +43,21 @@ export function QuantityDiscountWidget({ product, shop }) {
     if (productId && shop) {
       fetchDiscounts();
     }
-  }, [productId, shop, fetch]);
+  }, [productId, shop]);
+
+  const handleAddToCart = async (qty) => {
+    try {
+      await addToCart(variantId, qty);
+      setToastMessage(`Added ${qty} item${qty > 1 ? 's' : ''} to cart`);
+      setShowToast(true);
+      
+      // Optional: Redirect to cart
+      // window.location.href = '/cart';
+    } catch (err) {
+      setToastMessage(err.message || 'Failed to add to cart');
+      setShowToast(true);
+    }
+  };
 
   const calculatePrice = (qty) => {
     const tier = discountTiers.find(t => t.quantity <= qty);
@@ -61,12 +78,23 @@ export function QuantityDiscountWidget({ product, shop }) {
     return originalPrice - discountedPrice;
   };
 
-  if (loading) return <div className="quantity-widget">Loading...</div>;
-  if (error) return <div className="quantity-widget">Error: {error}</div>;
+  if (loading) return <Loading />;
+  if (!product || !variantId) return null;
   if (discountTiers.length === 0) return null;
+
+  const toastMarkup = showToast ? (
+    <Toast
+      content={toastMessage}
+      onDismiss={() => setShowToast(false)}
+      duration={3000}
+    />
+  ) : null;
 
   return (
     <Box padding="4" background="bg-surface">
+      {isLoading && <Loading />}
+      {toastMarkup}
+      
       <VerticalStack gap="4">
         {/* Regular Price */}
         <Box>
@@ -89,14 +117,21 @@ export function QuantityDiscountWidget({ product, shop }) {
                   value: tier.quantity.toString()
                 }))
               ]}
+              disabled={isLoading}
             />
           </Box>
-          <Button primary fullWidth>
-            Add to Cart - ${calculatePrice(quantity).toFixed(2)}
+          <Button 
+            primary 
+            fullWidth
+            loading={isLoading}
+            disabled={isLoading}
+            onClick={() => handleAddToCart(quantity)}
+          >
+            Add {quantity} to Cart - ${calculatePrice(quantity).toFixed(2)}
           </Button>
         </HorizontalStack>
 
-        {/* Discount Tiers */}
+        {/* Quick Add Buttons */}
         <VerticalStack gap="3">
           {discountTiers.map(tier => {
             const savings = calculateSavings(tier.quantity);
@@ -108,11 +143,11 @@ export function QuantityDiscountWidget({ product, shop }) {
                 borderRadius="2"
                 borderWidth="1"
                 borderColor="border"
-                onClick={() => setQuantity(tier.quantity)}
-                cursor="pointer"
+                onClick={() => !isLoading && handleAddToCart(tier.quantity)}
+                cursor={isLoading ? "wait" : "pointer"}
               >
                 <VerticalStack gap="1">
-                  <Text variant="headingSm">Buy {tier.quantity}+ items</Text>
+                  <Text variant="headingSm">Add {tier.quantity} items</Text>
                   <Text variant="bodyMd">
                     ${(calculatePrice(tier.quantity) / tier.quantity).toFixed(2)} per item
                   </Text>
@@ -135,6 +170,12 @@ export function QuantityDiscountWidget({ product, shop }) {
                 ? `${discountTiers.find(t => t.quantity <= quantity)?.rule?.value}% off`
                 : `$${discountTiers.find(t => t.quantity <= quantity)?.rule?.value} off per item`}
             </Text>
+          </Banner>
+        )}
+
+        {error && (
+          <Banner status="critical" onDismiss={() => setError(null)}>
+            <p>{error}</p>
           </Banner>
         )}
       </VerticalStack>
