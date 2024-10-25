@@ -4,12 +4,24 @@ application_url = "https://shopify-discount-app.webvijayi.com"
 embedded = true
 
 [access_scopes]
-# Read and modify products and their variants
-scopes = "write_products,read_products,write_discounts,read_discounts"
+# Core functionality
+scopes = "write_products,read_products"
+
+# Discount management
+scopes = "write_discounts,read_discounts"
+scopes = "read_price_rules,write_price_rules"
+
+# Order and checkout
+scopes = "read_orders,write_orders"
+scopes = "read_checkouts,write_checkouts"
+
+# Shipping (for cart calculations)
+scopes = "read_shipping,write_shipping"
 
 [auth]
 redirect_urls = [
-    "https://shopify-discount-app.webvijayi.com/auth/callback"
+    "https://shopify-discount-app.webvijayi.com/auth/callback",
+    "https://shopify-discount-app.webvijayi.com/auth/tokens"
 ]
 
 [webhooks]
