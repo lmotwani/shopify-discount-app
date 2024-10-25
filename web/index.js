@@ -17,6 +17,7 @@ await setupDatabase();
 
 // Initialize Shopify
 const { SHOPIFY_API_KEY, SHOPIFY_API_SECRET, SCOPES, HOST } = process.env;
+
 Shopify.Context.initialize({
   API_KEY: SHOPIFY_API_KEY,
   API_SECRET_KEY: SHOPIFY_API_SECRET,
@@ -32,23 +33,25 @@ Shopify.Context.initialize({
   HOST_SCHEME: HOST?.split("://")[0] || "https",
   API_VERSION: ApiVersion.October23,
   IS_EMBEDDED_APP: true,
+  // This should be replaced with a proper session storage
   SESSION_STORAGE: new Shopify.Session.MemorySessionStorage(),
 });
 
+// Create the app
 const app = express();
 
-// Middleware
+// Set up middleware
 app.use(compression());
 app.use(cookieParser(SHOPIFY_API_SECRET));
 app.use(express.json());
 app.use(logAccess);
 
-// Health check
+// Health check endpoint
 app.get("/health", (_req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
-// OAuth endpoints
+// Set up OAuth endpoints
 app.get("/auth", async (req, res) => {
   try {
     const shop = req.query.shop;
@@ -65,7 +68,6 @@ app.get("/auth", async (req, res) => {
       "/auth/callback",
       false,
     );
-
     res.redirect(authRoute);
   } catch (error) {
     console.error("OAuth error:", error);
@@ -118,6 +120,7 @@ app.use("/api/*", async (req, res, next) => {
   next();
 });
 
+// Mount API routes
 app.use("/api/discounts", discountRoutes);
 
 // Serve static files
@@ -143,13 +146,30 @@ app.use("/*", async (req, res, next) => {
 // Error handling
 app.use((err, req, res, _next) => {
   console.error("App error:", err);
+  logError(err, req);
   res.status(500).json({ error: "Internal Server Error" });
 });
 
 // Start server
 app.listen(PORT, "127.0.0.1", () => {
   console.log(`Server running on http://127.0.0.1:${PORT}`);
+  console.log(`Static files being served from: ${STATIC_PATH}`);
+  console.log('Environment:', {
+    NODE_ENV: process.env.NODE_ENV,
+    HOST: process.env.HOST
+  });
 }).on('error', (error) => {
   console.error('Failed to start server:', error);
   process.exit(1);
+});
+
+// Handle uncaught errors
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught Exception:", error);
+  logError(error);
+});
+
+process.on("unhandledRejection", (error) => {
+  console.error("Unhandled Rejection:", error);
+  logError(error);
 });
