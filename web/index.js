@@ -107,13 +107,16 @@ app.use((err, req, res, _next) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(PORT, "127.0.0.1", () => {
+  console.log(`Server running on http://127.0.0.1:${PORT}`);
   console.log(`Static files being served from: ${STATIC_PATH}`);
   console.log('Environment:', {
     NODE_ENV: process.env.NODE_ENV,
     HOST: process.env.HOST
   });
+}).on('error', (error) => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
 });
 
 // Handle uncaught errors
