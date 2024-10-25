@@ -23,7 +23,11 @@ const shopify = shopifyApp({
     hostScheme: process.env.HOST?.split("://")[0] || "https",
     apiVersion: "2024-01",
     isEmbeddedApp: true,
-    restResources
+    restResources,
+    logger: {
+      level: process.env.NODE_ENV === 'production' ? 'error' : 'debug',
+      httpRequests: process.env.NODE_ENV !== 'production',
+    },
   },
   auth: {
     path: "/auth",
@@ -31,15 +35,6 @@ const shopify = shopifyApp({
   },
   webhooks: {
     path: "/api/webhooks",
-    handlers: {
-      "APP_UNINSTALLED": {
-        deliveryMethod: "http",
-        callback: async (topic, shop, body) => {
-          console.log("App uninstalled from shop:", shop);
-          // Handle app uninstallation
-        },
-      },
-    },
   },
   sessionStorage: new SQLiteSessionStorage(join(process.cwd(), 'sessions.sqlite'))
 });

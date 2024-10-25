@@ -1,6 +1,7 @@
 # Environment Configuration
 .env
 .env.*
+!.env.example
 
 # Dependency directory
 node_modules
@@ -48,27 +49,3 @@ coverage/
 
 # Server files
 aapanel_website_config.conf
-DEPLOYMENT.md
-DEPLOYMENT_STEPS.md
-AAPANEL_COMMANDS.md
-AAPANEL_FIXES.md
-SHOPIFY_CONFIG.md
-EXACT_CONFIG.md
-START_APP.md
-PM2_FIX.md
-PM2_CORRECT.md
-SERVER_FIX.md
-MODULE_FIX.md
-NEXT_STEPS.md
-SHOPIFY_CONFIG_VALUES.md
-TESTING_STEPS.md
-DEPLOYMENT_GUIDE.md
-CODE_CLEANUP.md
-FINAL_CHECK.md
-GIT_CHECK.md
-COMPLETE_PROCESS.md
-cleanup.sh
-
-# Database
-database.sqlite
-web/database.sqlite
