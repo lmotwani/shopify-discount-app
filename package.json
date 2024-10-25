@@ -4,6 +4,10 @@
   "main": "web/index.js",
   "type": "module",
   "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:username/shopify-discount-app.git"
+  },
   "scripts": {
     "build": "vite build web/frontend",
     "dev": "vite dev web/frontend",
