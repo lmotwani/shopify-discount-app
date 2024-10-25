@@ -96,3 +96,4 @@ cleanup.sh
 
 # Local development
 .local/
+GIT_CHECK.md
