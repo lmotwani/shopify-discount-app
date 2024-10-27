@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Provider } from "@shopify/app-bridge-react";
 import { Banner, Layout, Page } from "@shopify/polaris";
@@ -24,6 +24,12 @@ export function AppBridgeProvider({ children }) {
   // Get API key from window
   const apiKey = process.env.SHOPIFY_API_KEY;
 
+  useEffect(() => {
+    if (!apiKey) {
+      console.error("Missing Shopify API key");
+    }
+  }, [apiKey]);
+
   if (!apiKey) {
     return (
       <Page narrowWidth>
@@ -41,6 +47,12 @@ export function AppBridgeProvider({ children }) {
 
   const host = new URLSearchParams(location.search).get("host");
 
+  useEffect(() => {
+    if (!host) {
+      console.error("Missing host parameter");
+    }
+  }, [host]);
+
   if (!host) {
     return (
       <Page narrowWidth>
@@ -56,15 +68,18 @@ export function AppBridgeProvider({ children }) {
     );
   }
 
+  const config = {
+    apiKey,
+    host,
+    forceRedirect: true,
+  };
+
+  useEffect(() => {
+    console.log("App Bridge Provider config:", config);
+  }, [config]);
+
   return (
-    <Provider
-      config={{
-        apiKey,
-        host,
-        forceRedirect: true,
-      }}
-      router={routerConfig}
-    >
+    <Provider config={config} router={routerConfig}>
       {children}
     </Provider>
   );

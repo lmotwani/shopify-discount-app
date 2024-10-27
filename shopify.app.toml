@@ -1,28 +1,27 @@
-name = "Quantity Based Discounts"
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+name = "Quantity based discounts"
 client_id = "078005936813f139cea0d930d5d6122f"
-application_url = "https://shopify-discount-app.webvijayi.com"
+application_url = "https://harbour-linking-www-howto.trycloudflare.com"
 embedded = true
 
 [access_scopes]
-# Combined scopes in one string, comma-separated
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = "write_products,read_products,read_price_rules,write_price_rules,read_discounts,write_discounts,read_themes,write_themes,read_script_tags,write_script_tags"
 
 [auth]
 redirect_urls = [
-    "https://shopify-discount-app.webvijayi.com/auth/callback",
-    "https://shopify-discount-app.webvijayi.com/auth/tokens"
+  "https://harbour-linking-www-howto.trycloudflare.com/auth/callback",
+  "https://harbour-linking-www-howto.trycloudflare.com/auth/shopify/callback",
+  "https://harbour-linking-www-howto.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
-api_version = "2024-01"
-
-[[webhooks.subscriptions]]
-topics = ["app/uninstalled"]
-uri = "/api/webhooks"
-
-[build]
-automatically_update_urls_on_dev = true
-include_config_on_deploy = true
+api_version = "2023-10"
 
 [pos]
 embedded = false
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "webvijayi.myshopify.com"

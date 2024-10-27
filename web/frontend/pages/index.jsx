@@ -6,7 +6,6 @@ import {
   Button,
   DataTable,
   Modal,
-  TextStyle,
 } from "@shopify/polaris";
 import { useAppQuery, useAuthenticatedFetch } from "../hooks";
 import { DiscountRuleForm } from "../components/DiscountRuleForm";

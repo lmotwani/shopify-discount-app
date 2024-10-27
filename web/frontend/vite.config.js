@@ -2,23 +2,21 @@ import { defineConfig } from "vite";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import react from "@vitejs/plugin-react";
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config({ path: '../../.env' });
 
 if (
   process.env.npm_lifecycle_event === "build" &&
   !process.env.CI &&
   !process.env.SHOPIFY_API_KEY
 ) {
-  console.warn(
+  console.error(
     "\nBuilding the frontend app without an API key. The frontend build will not run without an API key. Set the SHOPIFY_API_KEY environment variable when running the build command.\n"
   );
+  process.exit(1);
 }
-
-const proxyOptions = {
-  target: `http://127.0.0.1:${process.env.BACKEND_PORT}`,
-  changeOrigin: false,
-  secure: true,
-  ws: false,
-};
 
 const host = process.env.HOST
   ? process.env.HOST.replace(/https?:\/\//, "")
@@ -55,14 +53,22 @@ export default defineConfig({
     port: process.env.FRONTEND_PORT,
     hmr: hmrConfig,
     proxy: {
-      "^/(\\?.*)?$": proxyOptions,
-      "^/api(/|(\\?.*)?$)": proxyOptions,
+      "^/(\\?.*)?$": {
+        target: `http://127.0.0.1:${process.env.BACKEND_PORT}`,
+        changeOrigin: false,
+        secure: true,
+      },
+      "^/api(/|(\\?.*)?$)": {
+        target: `http://127.0.0.1:${process.env.BACKEND_PORT}`,
+        changeOrigin: false,
+        secure: true,
+      },
     },
   },
   build: {
     outDir: "dist",
     emptyOutDir: true,
     minify: true,
-    sourcemap: false
-  }
+    sourcemap: true,
+  },
 });

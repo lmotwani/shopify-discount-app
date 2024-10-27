@@ -1,5 +1,4 @@
-import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
+import Database from 'better-sqlite3';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
@@ -23,13 +22,10 @@ export async function setupDatabase() {
         fs.chmodSync(dbFile, 0o666);
       }
 
-      db = await open({
-        filename: dbFile,
-        driver: sqlite3.Database
-      });
+      db = new Database(dbFile, { verbose: console.log });
 
       // Create tables if they don't exist
-      await db.exec(`
+      db.exec(`
         CREATE TABLE IF NOT EXISTS discount_rules (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           shop_domain TEXT NOT NULL,
@@ -66,10 +62,10 @@ export async function getDatabase() {
 }
 
 // Handle cleanup on process exit
-process.on('SIGINT', async () => {
+process.on('SIGINT', () => {
   if (db) {
     try {
-      await db.close();
+      db.close();
       console.log('Database connection closed.');
     } catch (error) {
       console.error('Error closing database:', error);
