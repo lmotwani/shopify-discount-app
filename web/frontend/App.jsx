@@ -6,22 +6,25 @@ import {
   QueryProvider,
   PolarisProvider,
 } from "./components/providers";
+import Loading from "./components/Loading"; // Import the Loading component
 
-export default function App() {
-  // Any .tsx or .jsx files in /pages will become a route
-  // See documentation for <Routes /> for more info
+export default function App({ polarisTranslations, apiKey, host }) {
   const pages = import.meta.globEager("./pages/**/!(*.test.[jt]sx)*.([jt]sx)");
 
   return (
     <PolarisProvider>
       <BrowserRouter>
-        <AppBridgeProvider>
+        <AppBridgeProvider apiKey={apiKey} host={host}>
           <QueryProvider>
             <NavigationMenu
               navigationLinks={[
                 {
-                  label: "Page name",
-                  destination: "/pagename",
+                  label: "Discount Rules",
+                  destination: "/",
+                },
+                {
+                  label: "Cart Summary",
+                  destination: "/cart",
                 },
               ]}
             />

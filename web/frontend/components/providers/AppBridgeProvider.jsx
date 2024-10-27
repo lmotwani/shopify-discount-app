@@ -1,9 +1,9 @@
-import { useMemo, useEffect } from "react";
+import { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Provider } from "@shopify/app-bridge-react";
 import { Banner, Layout, Page } from "@shopify/polaris";
 
-export function AppBridgeProvider({ children }) {
+export function AppBridgeProvider({ children, apiKey, host }) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -21,46 +21,26 @@ export function AppBridgeProvider({ children }) {
     [history, location]
   );
 
-  // Get API key from window
-  const apiKey = process.env.SHOPIFY_API_KEY;
+  if (!apiKey || !host) {
+    const bannerProps = !apiKey 
+      ? {
+          title: "Missing Shopify API key",
+          children: "Your app is running without the SHOPIFY_API_KEY environment variable. Please ensure it is set when running the app.",
+        }
+      : {
+          title: "Missing host parameter",
+          children: "Your app can only load if the URL has a host parameter. Please ensure it is set when running the app.",
+        };
 
-  useEffect(() => {
-    if (!apiKey) {
-      console.error("Missing Shopify API key");
-    }
-  }, [apiKey]);
-
-  if (!apiKey) {
     return (
       <Page narrowWidth>
         <Layout>
           <Layout.Section>
-            <Banner title="Missing Shopify API key" status="critical">
-              Your app is running without the SHOPIFY_API_KEY environment variable.
-              Please ensure it is set when running the app.
-            </Banner>
-          </Layout.Section>
-        </Layout>
-      </Page>
-    );
-  }
-
-  const host = new URLSearchParams(location.search).get("host");
-
-  useEffect(() => {
-    if (!host) {
-      console.error("Missing host parameter");
-    }
-  }, [host]);
-
-  if (!host) {
-    return (
-      <Page narrowWidth>
-        <Layout>
-          <Layout.Section>
-            <Banner title="Missing host parameter" status="critical">
-              Your app can only load if the URL has a host parameter.
-              Please ensure it is set when running the app.
+            <Banner
+              title={bannerProps.title}
+              status="critical"
+            >
+              <p>{bannerProps.children}</p>
             </Banner>
           </Layout.Section>
         </Layout>
@@ -69,14 +49,10 @@ export function AppBridgeProvider({ children }) {
   }
 
   const config = {
-    apiKey,
     host,
-    forceRedirect: true,
+    apiKey,
+    forceRedirect: true
   };
-
-  useEffect(() => {
-    console.log("App Bridge Provider config:", config);
-  }, [config]);
 
   return (
     <Provider config={config} router={routerConfig}>

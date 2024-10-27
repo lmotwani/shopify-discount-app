@@ -1,10 +1,10 @@
 import { useAppBridge } from '@shopify/app-bridge-react';
 import { authenticatedFetch } from "@shopify/app-bridge-utils";
+import { Redirect } from '@shopify/app-bridge/actions';
 
 export function useAuthenticatedFetch() {
   const app = useAppBridge();
-  return authenticatedFetch(app);
-}
+  const fetchFunction = authenticatedFetch(app);
 
   return async (uri, options) => {
     const response = await fetchFunction(uri, options);

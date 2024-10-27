@@ -2,11 +2,13 @@
 .env
 .env.*
 !.env.example
+.DS_Store
+*.sw?
 
 # Dependency directory
-node_modules
-web/node_modules
-web/frontend/node_modules
+node_modules/
+web/node_modules/
+web/frontend/node_modules/
 
 # Build output
 dist/
@@ -16,7 +18,7 @@ build/
 *.sqlite3
 
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -24,13 +26,11 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # Editor directories and files
-.idea
-.DS_Store
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
@@ -44,8 +44,37 @@ coverage/
 .cache
 
 # Local development
-.shopify/*
+.shopify/
 .shopify.lock
 
 # Server files
 aapanel_website_config.conf
+
+# Lockfiles
+package-lock.json
+web/package-lock.json
+web/frontend/package-lock.json
+
+# Deployment script (if using Docker)
+deploy.sh
+
+# macOS specific files
+.DS_Store
+
+# Common cache and temporary directories
+/tmp/
+/out/
+
+# Operating system specific files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE and build system files
+.project
+.classpath
+.settings
+target/
+
+# Miscellaneous files
+*.pem # Private keys (ensure these are NOT committed)

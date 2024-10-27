@@ -1,42 +1,47 @@
-import { shopifyApp } from '@shopify/shopify-app-express';
-import { SQLiteSessionStorage } from '@shopify/shopify-app-session-storage-sqlite';
-import { restResources } from '@shopify/shopify-api/rest/admin/2024-01';
-import { join } from 'path';
+import { shopifyApi, LATEST_API_VERSION } from "@shopify/shopify-api";
+import { shopifyApp } from "@shopify/shopify-app-express";
+import { SQLiteSessionStorage } from "@shopify/shopify-app-session-storage-sqlite";
+import { restResources } from "@shopify/shopify-api/rest/admin/2024-10"; // Updated to the latest version
+import dotenv from 'dotenv';
+
+dotenv.config(); // Load environment variables from .env file
+
+const DB_PATH =
+  process.env.NODE_ENV === "production"
+    ? `${process.cwd()}/database/shopify.sqlite`
+    : `${process.cwd()}/database.sqlite`;
 
 const shopify = shopifyApp({
   api: {
+    apiVersion: LATEST_API_VERSION,
+    restResources,
     apiKey: process.env.SHOPIFY_API_KEY,
     apiSecretKey: process.env.SHOPIFY_API_SECRET,
-    scopes: process.env.SCOPES?.split(",") || [
-      "write_products",
-      "read_products",
-      "read_price_rules",
-      "write_price_rules",
-      "read_discounts",
-      "write_discounts",
-      "read_themes",
-      "write_themes",
-      "read_script_tags",
-      "write_script_tags"
-    ],
-    hostName: process.env.HOST?.replace(/https?:\/\//, ""),
-    hostScheme: process.env.HOST?.split("://")[0] || "https",
-    apiVersion: "2024-01",
-    isEmbeddedApp: true,
-    restResources,
-    logger: {
-      level: process.env.NODE_ENV === 'production' ? 'error' : 'debug',
-      httpRequests: process.env.NODE_ENV !== 'production',
-    },
+    hostName: process.env.SHOPIFY_HOST_NAME,
+    billing: undefined, // or replace with billingConfig if you have billing set up
   },
   auth: {
-    path: "/auth",
-    callbackPath: "/auth/callback",
+    path: "/api/auth",
+    callbackPath: "/api/auth/callback",
+    scopes: [
+      'write_products',
+      'read_products',
+      'read_price_rules',
+      'write_price_rules',
+      'read_discounts',
+      'write_discounts',
+      'read_themes',
+      'write_themes',
+      'read_script_tags',
+      'write_script_tags'
+    ],
   },
   webhooks: {
     path: "/api/webhooks",
   },
-  sessionStorage: new SQLiteSessionStorage(join(process.cwd(), 'sessions.sqlite'))
+  sessionStorage: new SQLiteSessionStorage(DB_PATH),
 });
 
 export default shopify;
+
+export const validateAuthenticatedSession = shopify.validateAuthenticatedSession();

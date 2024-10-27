@@ -2,7 +2,7 @@
 
 name = "Quantity based discounts"
 client_id = "078005936813f139cea0d930d5d6122f"
-application_url = "https://harbour-linking-www-howto.trycloudflare.com"
+application_url = "https://lithuania-dresses-momentum-crop.trycloudflare.com"
 embedded = true
 
 [access_scopes]
@@ -11,9 +11,9 @@ scopes = "write_products,read_products,read_price_rules,write_price_rules,read_d
 
 [auth]
 redirect_urls = [
-  "https://harbour-linking-www-howto.trycloudflare.com/auth/callback",
-  "https://harbour-linking-www-howto.trycloudflare.com/auth/shopify/callback",
-  "https://harbour-linking-www-howto.trycloudflare.com/api/auth/callback"
+  "https://lithuania-dresses-momentum-crop.trycloudflare.com/auth/callback",
+  "https://lithuania-dresses-momentum-crop.trycloudflare.com/auth/shopify/callback",
+  "https://lithuania-dresses-momentum-crop.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
